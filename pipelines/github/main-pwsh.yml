@@ -8,7 +8,6 @@ on:
 env:
   projectId: ${{ vars.PROJECT_ID }} # Set as variable
   umbracoCloudApiKey: ${{ secrets.UMBRACO_CLOUD_API_KEY }} # set as secret
-  baseUrl : https://api.cloud.umbraco.com # Umbraco Cloud Base API path for CI/CD feature
 
 # Actual build and test steps has been omitted from this pipeline sample
 jobs:
@@ -18,6 +17,40 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      # Gets the latest CICD Flow deployment if there is any
+      # Will write "latestDeploymentId" to pipeline variables, value can be an uuid or empty string 
+      - name: Get Latest Deployment
+        id: latest-deployment
+        shell: pwsh
+        run: >
+          ${{GITHUB.WORKSPACE}}/.github/powershell/get-latest-deployment.ps1 
+          -ProjectId ${{ env.projectId }} 
+          -ApiKey ${{ env.umbracoCloudApiKey }} 
+          -PipelineVendor GITHUB
+      
+      ## TODO: MISSING LOGIC
+      # If "latestDeploymentId" is '', then skip the ahead to "Prepare Cloud Git Ignore"
+
+      # Download git-patch file based on latest deployment
+      # Will write "remoteChanges" to pipeline variables, value can be "yes" or "no"
+      # When "remoteChanges" is yes, there will also be downloaded a patch-file to the path you specified in -DownloadFolder parameter
+      - name: Fetch Changes From Cloud
+        id: latest-changes
+        shell: pwsh
+        run: >
+          ${{GITHUB.WORKSPACE}}/.github/powershell/get-changes-by-id.ps1 
+          -ProjectId ${{ env.projectId }} 
+          -ApiKey ${{ env.umbracoCloudApiKey }} 
+          -DeploymentId ${{ steps.latest-deployment.outputs.latestDeploymentId}}
+          -DownloadFolder ${{GITHUB.WORKSPACE}}/patch
+          -PipelineVendor GITHUB
+
+      ## TODO: MISSING LOGIC
+      # Possible strategies
+      # - Apply changes to pipeline and maybe continue flow
+      # - Create a new branch with changes and end this pipeline flow
+      # - (something else we haven't thought of yet)
+
       # switch the gitignore files so cloud does not ignore the build frontend assets
       - name: Prepare Cloud Git Ignore
         run: cp cloud.gitignore .gitignore
@@ -25,7 +58,7 @@ jobs:
 
       # zip everything, except what is defined in the '.zipignore'
       - name: Zip Source Code
-        run: zip -r sources.zip . -x@.zipignore
+        run: zip -r sources.zip . -x@cloud.zipignore
         shell: bash
 
       # Request to prepare a deployment
@@ -36,7 +69,6 @@ jobs:
         shell: pwsh
         run: >
           ${{GITHUB.WORKSPACE}}/.github/powershell/new-deployment.ps1 
-          -BaseUrl ${{env.baseUrl}} 
           -ProjectId ${{ env.projectId }} 
           -ApiKey ${{ env.umbracoCloudApiKey }} 
           -CommitMessage "Run number ${{github.run_number}}" 
@@ -47,9 +79,8 @@ jobs:
         shell: pwsh
         run: >
           ${{GITHUB.WORKSPACE}}/.github/powershell/add-deployment-package.ps1 
-          -BaseUrl ${{env.baseUrl}} 
           -ProjectId ${{ env.projectId }} 
-          -DeploymentId ${{ steps.deployment-meta.outputs.DEPLOYMENT_ID }} 
+          -DeploymentId ${{ steps.deployment-meta.outputs.deploymentId }} 
           -ApiKey ${{ env.umbracoCloudApiKey }} 
           -FilePath ${{ GITHUB.WORKSPACE }}/sources.zip
 
@@ -58,9 +89,8 @@ jobs:
         shell: pwsh
         run: >
           ${{GITHUB.WORKSPACE}}/.github/powershell/start-deployment.ps1 
-          -BaseUrl ${{env.baseUrl}} 
           -ProjectId ${{ env.projectId }} 
-          -DeploymentId ${{ steps.deployment-meta.outputs.DEPLOYMENT_ID }} 
+          -DeploymentId ${{ steps.deployment-meta.outputs.deploymentId }} 
           -ApiKey ${{ env.umbracoCloudApiKey }}
 
       # Poll until deployment finishes 
@@ -68,7 +98,6 @@ jobs:
         shell: pwsh
         run: >
           ${{GITHUB.WORKSPACE}}/.github/powershell/test-deployment-status.ps1 
-          -BaseUrl ${{env.baseUrl}} 
           -ProjectId ${{ env.projectId }} 
-          -DeploymentId ${{ steps.deployment-meta.outputs.DEPLOYMENT_ID }} 
+          -DeploymentId ${{ steps.deployment-meta.outputs.deploymentId }} 
           -ApiKey ${{ env.umbracoCloudApiKey }}
