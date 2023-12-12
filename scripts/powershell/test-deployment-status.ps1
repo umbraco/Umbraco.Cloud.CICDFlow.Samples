@@ -1,24 +1,29 @@
 param(
     [Parameter(Position=0)]
     [string] 
-    $BaseUrl,
+    $ProjectId,
     
     [Parameter(Position=1)]
     [string] 
-    $ProjectId,
+    $DeploymentId,
     
     [Parameter(Position=2)]
     [string] 
-    $DeploymentId,
-    
-    [Parameter(Position=3)]
-    [string] 
     $ApiKey,
     
-    [Parameter(Position=4)]
+    [Parameter(Position=3)]
     [int] 
-    $TimeoutSeconds = 1200
+    $TimeoutSeconds = 1200,
+
+    [Parameter(Position=4)]    
+    [string] 
+    $BaseUrl = "https://api.cloud.umbraco.com"
 )
+
+### Endpoint docs
+# https://docs.umbraco.com/umbraco-cloud/set-up/project-settings/umbraco-cicd/umbracocloudapi#get-deployment-status
+#
+$url = "$BaseUrl/v1/projects/$ProjectId/deployments/$DeploymentId"
 
 $timer = [Diagnostics.Stopwatch]::StartNew()
 
@@ -26,7 +31,6 @@ $headers = @{
     'Umbraco-Cloud-Api-Key' = $ApiKey
     'Content-Type' = 'application/json'
 }
-$url = "$BaseUrl/v1/projects/$ProjectId/deployments/$DeploymentId"
 
 function Request-Deployment-Status ([INT]$run){
     Write-Host "=====> Requesting Status - Run number $run"

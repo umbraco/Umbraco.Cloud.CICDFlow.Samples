@@ -1,25 +1,28 @@
-param(
+param(    
     [Parameter(Position=0)]
-    [string] 
-    $BaseUrl,
-    
-    [Parameter(Position=1)]
     [string] 
     $ProjectId,
     
-    [Parameter(Position=2)]
+    [Parameter(Position=1)]
     [string] 
     $DeploymentId,
     
-    [Parameter(Position=3)]
+    [Parameter(Position=2)]
     [string] 
     $ApiKey,
     
-    [Parameter(Position=4)]
+    [Parameter(Position=3)]
     [string] 
-    $FilePath
+    $FilePath,
+
+    [Parameter(Position=4)]    
+    [string] 
+    $BaseUrl = "https://api.cloud.umbraco.com"
 )
 
+### Endpoint docs
+# https://docs.umbraco.com/umbraco-cloud/set-up/project-settings/umbraco-cicd/umbracocloudapi#upload-zip-source-file
+#
 $url = "$BaseUrl/v1/projects/$ProjectId/deployments/$DeploymentId/package"
 
 $fieldName = 'file'
