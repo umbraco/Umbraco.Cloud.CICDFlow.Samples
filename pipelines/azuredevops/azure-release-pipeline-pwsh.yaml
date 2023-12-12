@@ -13,8 +13,6 @@ variables:
     value: 'Release'
   - name: projectId
     value: 12abc3de-4f5g-6789-0hi1-23j456789012 # update to use your projectId - ideally put into an environment variable 
-  - name: baseUrl # Umbraco Cloud Base API path for CI/CD feature
-    value: https://api.cloud.umbraco.com
 
 trigger:
   batch: true
@@ -36,7 +34,7 @@ stages:
             displayName: Prepare Cloud Git Ignore
 
           # zip everything, except what is defined in the '.zipignore'
-          - script: zip -r dist/sources_$(Build.BuildNumber).zip . -x@zip.ignore
+          - script: zip -r dist/sources_$(Build.BuildNumber).zip . -x@cloud.zipignore
             displayName: Zip source files to package artifact
 
           - publish: $(System.DefaultWorkingDirectory)/dist/
@@ -67,7 +65,6 @@ stages:
               targetType: 'filePath'
               filePath: devops/powershell/new-deployment.ps1
               arguments: > # Use this to avoid newline characters in multiline string
-                -BaseUrl $(baseUrl)
                 -ProjectId $(projectId)
                 -ApiKey $($env:umbracoApiKey)
                 -CommitMessage "Deploying $(Build.BuildNumber)"
@@ -84,7 +81,6 @@ stages:
               targetType: 'filePath'
               filePath: devops/powershell/add-deployment-package.ps1
               arguments: > 
-                -BaseUrl $(baseUrl)
                 -ProjectId $(projectId)
                 -DeploymentId $(deploymentId)
                 -ApiKey $($env:umbracoApiKey)
@@ -101,7 +97,6 @@ stages:
               targetType: 'filePath'
               filePath: devops/powershell/start-deployment.ps1
               arguments: > 
-                -BaseUrl $(baseUrl)
                 -ProjectId $(projectId)
                 -DeploymentId $(deploymentId)
                 -ApiKey $($env:umbracoApiKey)
@@ -117,7 +112,6 @@ stages:
               targetType: 'filePath'
               filePath: devops/powershell/test-deployment-status.ps1
               arguments: > 
-                -BaseUrl $(baseUrl)
                 -ProjectId $(projectId)
                 -DeploymentId $(deploymentId)
                 -ApiKey $($env:umbracoApiKey)
