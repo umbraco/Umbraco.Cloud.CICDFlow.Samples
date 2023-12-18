@@ -1,0 +1,42 @@
+name: $(MajorVersion).$(MinorVersion)$(Rev:.r)
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - name: MajorVersion
+    value: 0
+  - name: MinorVersion
+    value: 5
+  - name: BuildConfiguration
+    value: 'Release'
+  - name: projectId
+    value: ##Your project Id here##
+  - name: pipelineVendor
+    value: 'AZUREDEVOPS'
+
+# Trigger when committing to main branch
+trigger:
+  batch: true
+  branches:
+    include:
+      - main
+
+# Try to sync the local repository to get up to speed with any changes in cloud
+stages:
+  - stage: cloudSyncStage
+    displayName: Umbraco Cloud Sync
+    jobs:
+      - template: cloud-sync.yml  
+        parameters:
+          projectId: $(projectId)
+          umbracoCloudApiKey: $(umbracoCloudApiKey)
+
+  - stage: CloudDeploymentStage
+    displayName: Deploy To Cloud
+    jobs: 
+      - template: cloud-deployment.yml
+        parameters:
+          projectId: $(projectId)
+          umbracoCloudApiKey: $(umbracoCloudApiKey)
+          

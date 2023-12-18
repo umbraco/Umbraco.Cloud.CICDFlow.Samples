@@ -73,7 +73,7 @@ jobs:
 
   applyRemoteChanges:
     name: Apply remote changes
-    needs: checkForChanges
+    needs: [preflight, checkForChanges]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -92,14 +92,19 @@ jobs:
           name: git-patch
           path: ${{GITHUB.WORKSPACE}}/patch
       
-      - name: Apply Change
+      # Using plain git to try an push changes back to local repo
+      # Depending on your setup you may need to change settings and permissions to better fit your needs
+      # This targets the same branch as the pipeline was triggered on.
+      # Stopping a new pipeline run by using the "[skip ci]" as part of commit message 
+      - name: Applying git patch to branch
         env:
           remoteChanges: ${{ needs.checkForChanges.outputs.remoteChanges }}
+          latestDeploymentId: ${{ needs.preflight.outputs.latestDeployemntId }}
         if: ${{ env.remoteChanges == 'yes' }}
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
           git apply ${{GITHUB.WORKSPACE}}/patch/git-patch.diff
           git add *
-          git commit -m "Adding changes in pipeline [skip ci]"
+          git commit -m "Adding cloud changes since deployment ${{ env.latestDeploymentId }} [skip ci]"
           git push

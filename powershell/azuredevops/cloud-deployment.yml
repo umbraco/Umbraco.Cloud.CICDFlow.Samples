@@ -1,0 +1,94 @@
+parameters:
+  - name: projectId
+    type: string
+  - name: umbracoCloudApiKey
+
+
+jobs:
+  - job: prepareDeployment
+    displayName: Prepare Deployment to cloud
+    steps:
+      # switch the gitignore files so cloud does not ignore the build frontend assets
+      - script: cp cloud.gitignore .gitignore
+        displayName: Prepare Cloud Git Ignore
+      
+      # zip everything, except what is defined in the 'cloud.zipignore'
+      - script: zip -r sources.zip . -x@cloud.zipignore
+        displayName: Zip Source Code
+
+      - publish: $(System.DefaultWorkingDirectory)/sources.zip
+        displayName: Store package for upload
+        artifact: SourcesZip
+
+  - job: callUmbracoApi
+    displayName: Upload Source And Start Deployment
+    dependsOn: prepareDeployment
+    steps:
+      - download: current
+        displayName: Get source zip from build
+        artifact: SourcesZip
+
+      # Request to prepare a deployment
+      # - sets the commit message to be used in cloud 
+      # - supplies you with a deploymentId to be used in the rest of the process
+      - task: PowerShell@2
+        displayName: Create Deployment Meta
+        name: deploymentMeta
+        env:
+          projectId: ${{ parameters.projectId }}
+          umbracoApiKey: ${{ parameters.umbracoCloudApiKey }}
+        inputs:
+          pwsh: true
+          targetType: 'filePath'
+          filePath: devops/powershell/New-Deployment.ps1
+          arguments: > 
+            -ProjectId $($env:projectId)
+            -ApiKey $($env:umbracoApiKey)
+            -CommitMessage "Deploying $(Build.BuildNumber)"
+            -PipelineVendor $(pipelineVendor)
+
+      # Upload your zipped artifact
+      - task: PowerShell@2
+        displayName: Post Zipped Artifact
+        env:
+          projectId: ${{ parameters.projectId }}
+          umbracoApiKey: ${{ parameters.umbracoCloudApiKey }}
+        inputs:
+          pwsh: true
+          targetType: 'filePath'
+          filePath: devops/powershell/Add-DeploymentPackage.ps1
+          arguments: > 
+            -ProjectId $($env:projectId)
+            -DeploymentId $(deploymentId)
+            -ApiKey $($env:umbracoApiKey)
+            -FilePath $(Pipeline.Workspace)/SourcesZip/sources.zip
+
+      # Actually request to start the deployment process in cloud
+      - task: PowerShell@2
+        displayName: Request Start Deployment
+        env:
+          projectId: ${{ parameters.projectId }}
+          umbracoApiKey: ${{ parameters.umbracoCloudApiKey }}
+        inputs:
+          pwsh: true
+          targetType: 'filePath'
+          filePath: devops/powershell/Start-Deployment.ps1
+          arguments: > 
+            -ProjectId $($env:projectId)
+            -DeploymentId $(deploymentId)
+            -ApiKey $($env:umbracoApiKey)
+
+      # Poll until deployment finishes 
+      - task: PowerShell@2
+        displayName: Wait for deployment completed
+        env:
+          projectId: ${{ parameters.projectId }}
+          umbracoApiKey: ${{ parameters.umbracoCloudApiKey }}
+        inputs:
+          pwsh: true
+          targetType: 'filePath'
+          filePath: devops/powershell/Test-DeploymentStatus.ps1
+          arguments: > 
+            -ProjectId $($env:projectId)
+            -DeploymentId $(deploymentId)
+            -ApiKey $($env:umbracoApiKey)
