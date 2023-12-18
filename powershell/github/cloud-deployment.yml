@@ -1,0 +1,103 @@
+name: Deploy To Cloud
+
+on:
+  workflow_call:
+    inputs: 
+      projectId: 
+        required: true
+        type: string
+    secrets:
+      umbracoCloudApiKey:
+        required: true
+
+env:
+  projectId: ${{ inputs.projectId }}
+  umbracoCloudApiKey: ${{ secrets.umbracoCloudApiKey }}
+
+jobs:
+  prepareDeployment:
+    name: Prepare Deployment to cloud
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # switch the gitignore files so cloud does not ignore the build frontend assets
+      - name: Prepare Cloud Git Ignore
+        run: cp cloud.gitignore .gitignore
+        shell: bash
+
+      # zip everything, except what is defined in the '.zipignore'
+      - name: Zip Source Code
+        run: zip -r sources.zip . -x@cloud.zipignore
+        shell: bash
+
+      - name: Store package for upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: source-artifact
+          path: ${{GITHUB.WORKSPACE}}/sources.zip
+          retention-days: 1
+    
+  callUmbracoApi:
+    name: Upload Source And Start Deployment
+    runs-on: ubuntu-latest
+    needs: prepareDeployment
+    outputs: 
+      runningDeploymentId: ${{ steps.deployment-meta.outputs.deploymentId }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get package for upload
+        uses: actions/download-artifact@v3
+        with:
+            name: source-artifact
+
+      # Request to prepare a deployment
+      # - sets the commit message to be used in cloud 
+      # - supplies you with a deploymentId to be used in the rest of the process
+      - name: Create Deployment Meta
+        id: deployment-meta
+        shell: pwsh
+        run: >
+          ${{GITHUB.WORKSPACE}}/.github/powershell/New-Deployment.ps1 
+          -ProjectId ${{ env.projectId }} 
+          -ApiKey ${{ env.umbracoCloudApiKey }} 
+          -CommitMessage "Run number ${{github.run_number}}" 
+          -PipelineVendor GITHUB
+
+      # Upload your zipped artifact
+      - name: Post Zipped Artifact
+        shell: pwsh
+        run: >
+          ${{GITHUB.WORKSPACE}}/.github/powershell/Add-DeploymentPackage.ps1 
+          -ProjectId ${{ env.projectId }} 
+          -DeploymentId ${{ steps.deployment-meta.outputs.deploymentId }} 
+          -ApiKey ${{ env.umbracoCloudApiKey }} 
+          -FilePath ${{ GITHUB.WORKSPACE }}/sources.zip
+
+      # Actually request to start the deployment process in cloud
+      - name: Request Start Deployment
+        shell: pwsh
+        run: >
+          ${{GITHUB.WORKSPACE}}/.github/powershell/Start-Deployment.ps1 
+          -ProjectId ${{ env.projectId }} 
+          -DeploymentId ${{ steps.deployment-meta.outputs.deploymentId }} 
+          -ApiKey ${{ env.umbracoCloudApiKey }}
+
+  awaitDeploymentFinished:
+    name: Await deployment to finish
+    runs-on: ubuntu-latest
+    needs: callUmbracoApi
+    steps:
+      - uses: actions/checkout@v4
+
+      # Poll until deployment finishes 
+      - name: Wait for deployment completed 
+        shell: pwsh
+        env: 
+          runningDeploymentId: ${{ needs.callUmbracoApi.outputs.runningDeploymentId }}
+        run: >
+          ${{GITHUB.WORKSPACE}}/.github/powershell/Test-DeploymentStatus.ps1 
+          -ProjectId ${{ env.projectId }} 
+          -DeploymentId ${{ env.runningDeploymentId }} 
+          -ApiKey ${{ env.umbracoCloudApiKey }}

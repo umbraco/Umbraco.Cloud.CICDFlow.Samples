@@ -1,0 +1,31 @@
+name: pipeline
+
+# Trigger when committing to main branch
+on:
+  push:
+    branches:
+     - main
+
+env:
+  ## Project Id stored in Repository variables
+  projectId: ${{ vars.PROJECT_ID }} 
+  ## Umbraco Cloud Api Key stored in Repository secrets
+  umbracoCloudApiKey: ${{ secrets.UMBRACO_CLOUD_API_KEY }} 
+
+jobs:
+  cloud-sync:
+    # fix reference to your pipeline
+    uses: your-organization-or-user/your-repo/.github/workflows/cloud-sync.yml@main
+    with:
+      projectId: ${{ vars.PROJECT_ID }}
+    secrets:
+      umbracoCloudApiKey: ${{ secrets.UMBRACO_CLOUD_API_KEY }}
+
+  cloud-deployment:
+    needs: cloud-sync
+    # fix reference to your pipeline
+    uses: your-organization-or-user/your-repo/.github/workflows/cloud-deployment.yml@main
+    with:
+      projectId: ${{ vars.PROJECT_ID }}
+    secrets:
+      umbracoCloudApiKey: ${{ secrets.UMBRACO_CLOUD_API_KEY }}
