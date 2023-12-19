@@ -7,7 +7,7 @@ variables:
   - name: MajorVersion
     value: 0
   - name: MinorVersion
-    value: 5
+    value: 0
   - name: BuildConfiguration
     value: 'Release'
   - name: projectId

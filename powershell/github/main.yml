@@ -14,7 +14,7 @@ env:
 
 jobs:
   cloud-sync:
-    # fix reference to your pipeline
+    # update reference to your pipeline
     uses: your-organization-or-user/your-repo/.github/workflows/cloud-sync.yml@main
     with:
       projectId: ${{ vars.PROJECT_ID }}
@@ -23,7 +23,7 @@ jobs:
 
   cloud-deployment:
     needs: cloud-sync
-    # fix reference to your pipeline
+    # update reference to your pipeline
     uses: your-organization-or-user/your-repo/.github/workflows/cloud-deployment.yml@main
     with:
       projectId: ${{ vars.PROJECT_ID }}
