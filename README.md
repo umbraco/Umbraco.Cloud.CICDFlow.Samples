@@ -1,7 +1,7 @@
 # Umbraco Cloud CICD Flow Samples
 Scripts and pipeline samples for the CI/CD Flow feature on Umbraco Cloud.
 
-The Scripts are provides as is - This means that the scripts will do the bare minimum for a pipeline that is utilizing the CI/CD flow.
+The Scripts are provided as is - This means that the scripts will do the bare minimum for a pipeline that is utilizing the CI/CD flow.
 The idea is that they can be integrated into your own pipelines so they will have the ability to do deployments to your Umbraco Cloud projects.
 
 ## PowerShell scripts
