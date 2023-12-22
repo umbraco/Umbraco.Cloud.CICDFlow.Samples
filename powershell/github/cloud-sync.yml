@@ -2,16 +2,14 @@ name: Umbraco Cloud Sync
 
 on:
   workflow_call:
-    inputs: 
+    secrets:
       projectId: 
         required: true
-        type: string
-    secrets:
       umbracoCloudApiKey:
         required: true
   
 env:
-  projectId: ${{ inputs.projectId }}
+  projectId: ${{ secrets.projectId }}
   umbracoCloudApiKey: ${{ secrets.umbracoCloudApiKey }}
 
 jobs:
