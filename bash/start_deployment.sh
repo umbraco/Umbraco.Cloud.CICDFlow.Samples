@@ -1,29 +1,47 @@
 #!/bin/bash
 
 # Set variables
-baseUrl="$1"
-projectId="$2"
-deploymentId="$3"
+projectId="$1"
+deploymentId="$2"
+apiKey="$3"
+
+# Not required, defaults to https://api.cloud.umbraco.com
+baseUrl="$4" 
+
+if [[ -z "$baseUrl" ]]; then
+    baseUrl="https://api.cloud.umbraco.com"
+fi
+
+### Endpoint docs
+# https://docs.umbraco.com/umbraco-cloud/set-up/project-settings/umbraco-cicd/umbracocloudapi#start-deployment
+#
 url="$baseUrl/v1/projects/$projectId/deployments/$deploymentId"
-apiKey="$4"
 
 # Define function to call API to start thedeployment
 function call_api {
-  echo "$url"
-  response=$(curl --insecure -s -X PATCH $url \
+  echo "Requesting start Deployment at $url"
+  response=$(curl -s -w "%{http_code}" -X PATCH $url \
     -H "Umbraco-Cloud-Api-Key: $apiKey" \
     -H "Content-Type: application/json" \
     -d "{\"deploymentState\": \"Queued\"}")
-  echo "$response"
-  # http status 202 expected here
-  # extract status for validation
-  status=$(echo "$response" | jq -r '.deploymentState')
-  if [[ $status != "Queued" ]]; then
-    echo "Unexpected status: $status"
-    exit 1
+
+  responseCode=${response: -3}  
+  content=${response%???}
+
+  if [[ 10#$responseCode -eq 202 ]]; then
+    updateMessage=$(echo "$response" | jq -r '.updateMessage')
+    echo "Deployment started successfully -> $deployment_id"
+    echo $updateMessage
+    exit 0
   fi
+
+  ## Let errors bubble forward 
+  echo "Unexpected API Response Code: $responseCode"
+  echo "---Response Start---"
+  echo $content
+  echo "---Response End---"
+  exit 1
 }
 
 call_api
 
-echo "Deployment started successfully -> $deployment_id"

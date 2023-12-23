@@ -29,12 +29,12 @@ function get_changes {
 
   if [[ 10#$responseCode -eq 204 ]]; then
     echo "No Changes - You can continue"
-    remoteChanges = "no"
+    remoteChanges="no"
     return
   elif [[ 10#$responseCode -eq 200 ]]; then
     echo "Changes detected"
     $Response | Select-Object -ExpandProperty Content | Out-File "$DownloadFolder/git-patch.diff"
-    remoteChanges = "yes"
+    remoteChanges="yes"
     return
   fi
   echo "---Response Start---"
@@ -44,7 +44,7 @@ function get_changes {
   exit 1
 }
 
-if [[ -z "$latestDeploymentId" ]]; then
+if [[ -z "$deploymentId" ]]; then
   echo "I need a DeploymentId of an older deployment to download a git-patch"
   exit 1
 fi
