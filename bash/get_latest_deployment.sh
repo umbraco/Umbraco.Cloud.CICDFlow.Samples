@@ -60,10 +60,10 @@ call_api
 
 ## Write the latest deployment id to the pipelines variables for use in a later step
 if [[ "$pipelineVendor" == "GITHUB" ]]; then
-  echo "latestDeploymentId=$deployment_id" >> "$GITHUB_OUTPUT"
+  echo "latestDeploymentId=$latestDeploymentId" >> "$GITHUB_OUTPUT"
   exit 0
 elif [[ "$pipelineVendor" == "AZUREDEVOPS" ]]; then
-  echo "##vso[task.setvariable variable=latestDeploymentId;isOutput=true]$deployment_id"
+  echo "##vso[task.setvariable variable=latestDeploymentId;isOutput=true]$latestDeploymentId"
   exit 0
 elif [[ "$pipelineVendor" == "TESTRUN" ]]; then
   echo $pipelineVendor

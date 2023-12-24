@@ -11,7 +11,7 @@ timeoutSeconds="$4"
 # Not required, defaults to https://api.cloud.umbraco.com
 baseUrl="$5" 
 
-if [[ -z "$timeoutSeconds" ]]: then
+if [[ -z "$timeoutSeconds" ]]; then
   timeoutSeconds=1200
 fi
 
@@ -47,6 +47,8 @@ function call_api {
   echo "---Response End---"
   exit 1
 }
+
+status="Pending" #Status set to get the while-loop running :)
 
 while [[ $status == "Pending" || $status == "InProgress" || $status == "Queued" ]]; do
   call_api
