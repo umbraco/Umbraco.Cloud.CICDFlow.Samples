@@ -1,0 +1,21 @@
+name: pipeline
+
+# Trigger when committing to main branch
+on:
+  push:
+    branches:
+     - main
+
+jobs:
+  cloud-sync:
+    uses: ./.github/workflows/cloud-sync.yml
+    secrets:
+      projectId: ${{ secrets.PROJECT_ID }}
+      umbracoCloudApiKey: ${{ secrets.API_KEY }}
+
+  cloud-deployment:
+    needs: cloud-sync
+    uses: ./.github/workflows/cloud-deployment.yml
+    secrets:
+      projectId: ${{ secrets.PROJECT_ID }}
+      umbracoCloudApiKey: ${{ secrets.API_KEY }}

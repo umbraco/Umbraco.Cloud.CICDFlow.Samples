@@ -1,0 +1,109 @@
+name: Umbraco Cloud Sync
+
+on:
+  workflow_call:
+    secrets:
+      projectId: 
+        required: true
+      umbracoCloudApiKey:
+        required: true
+  
+env:
+  projectId: ${{ secrets.projectId }}
+  umbracoCloudApiKey: ${{ secrets.umbracoCloudApiKey }}
+
+jobs:
+  preflight:
+    name: Preflight checks
+    runs-on: ubuntu-latest
+    steps:
+      # Gets the latest CICD Flow deployment if there is any
+      # Will write "latestDeploymentId" to pipeline variables, value can be an uuid or empty string 
+      - uses: actions/checkout@v3
+      - name: Get Latest Deployment
+        id: latest-deployment
+        shell: bash
+        run: >
+          bash ${{GITHUB.WORKSPACE}}/.github/scripts/get_latest_deployment.sh
+          ${{ env.projectId }} 
+          ${{ env.umbracoCloudApiKey }} 
+          GITHUB
+         
+    outputs: 
+      latestDeployemntId: ${{ steps.latest-deployment.outputs.latestDeploymentId }}
+
+  checkForChanges:
+    name: Check if there are changes since latest deployment
+    needs: preflight
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      # Download git-patch file based on latest deployment
+      # Will write "remoteChanges" to pipeline variables, value can be "yes" or "no"
+      # When "remoteChanges" is yes, there will also be downloaded a patch-file to the path you specified in -DownloadFolder parameter
+      - name: Fetch Changes From Cloud
+        env:
+          latestDeploymentId: ${{ needs.preflight.outputs.latestDeployemntId }}
+        if: ${{ env.latestDeploymentId != '' }}
+        id: latest-changes
+        shell: bash
+        run: >
+          bash ${{GITHUB.WORKSPACE}}/.github/scripts/get_changes_by_id.sh 
+          ${{ env.projectId }} 
+          ${{ env.umbracoCloudApiKey }} 
+          ${{ env.latestDeploymentId }}
+          ${{GITHUB.WORKSPACE}}/patch
+          GITHUB
+
+      - name: See diff content if any
+        if: ${{ steps.latest-changes.outputs.remoteChanges == 'yes' }}
+        shell: pwsh
+        run: get-content ${{GITHUB.WORKSPACE}}/patch/git-patch.diff
+
+      - name: Store diff before applying
+        if: ${{ steps.latest-changes.outputs.remoteChanges == 'yes' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: git-patch
+          path: ${{GITHUB.WORKSPACE}}/patch/git-patch.diff
+          retention-days: 1
+    outputs:
+      remoteChanges: ${{ steps.latest-changes.outputs.remoteChanges }}  
+
+  applyRemoteChanges:
+    name: Apply remote changes
+    needs: [preflight, checkForChanges]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        env:
+          remoteChanges: ${{ needs.checkForChanges.outputs.remoteChanges }}
+        if: ${{ env.remoteChanges == 'yes' }}
+        with:
+          fetch-depth: 0
+
+      - name: Get stored diff
+        env:
+          remoteChanges: ${{ needs.checkForChanges.outputs.remoteChanges }}
+        if: ${{ env.remoteChanges == 'yes' }}
+        uses: actions/download-artifact@v3
+        with:
+          name: git-patch
+          path: ${{GITHUB.WORKSPACE}}/patch
+      
+      # Using plain git to try an push changes back to local repo
+      # Depending on your setup you may need to change settings and permissions to better fit your needs
+      # This targets the same branch as the pipeline was triggered on.
+      # Stopping a new pipeline run by using the "[skip ci]" as part of commit message 
+      - name: Applying git patch to branch
+        env:
+          remoteChanges: ${{ needs.checkForChanges.outputs.remoteChanges }}
+          latestDeploymentId: ${{ needs.preflight.outputs.latestDeployemntId }}
+        if: ${{ env.remoteChanges == 'yes' }}
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git apply ${{GITHUB.WORKSPACE}}/patch/git-patch.diff
+          git add *
+          git commit -m "Adding cloud changes since deployment ${{ env.latestDeploymentId }} [skip ci]"
+          git push
