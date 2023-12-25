@@ -1,0 +1,103 @@
+parameters:
+  - name: projectId
+    type: string
+  - name: umbracoCloudApiKey
+
+jobs:
+  - job: cloudSync
+    displayName: Preflight Checks
+    steps:
+      # Gets the latest CICD Flow deployment if there is any
+      # Will write "latestDeploymentId" to pipeline variables, value can be an uuid or empty string 
+      - task: Bash@3
+        displayName: Get Latest Deployment
+        name: getLatestDeploymentId
+        env:
+          projectId: ${{ parameters.projectId }}
+          umbracoApiKey: ${{ parameters.umbracoCloudApiKey }}
+        inputs:
+          targetType: 'filePath'
+          filePath: devops/scripts/get_latest_deployment.sh
+          arguments: > 
+            $(projectId)
+            $umbracoApiKey
+            $(pipelineVendor)
+
+  - job: checkForChanges
+    displayName: Check if there are changes since latest deployment
+    dependsOn: cloudSync
+    condition: ne(dependencies.cloudSync.outputs['getLatestDeploymentId.latestDeploymentId'], '')
+    variables:
+      latestDeploymentId: $[ dependencies.cloudSync.outputs['getLatestDeploymentId.latestDeploymentId'] ]
+    steps:
+    # Download git-patch file based on latest deployment
+    # Will write "remoteChanges" to pipeline variables, value can be "yes" or "no"
+    # When "remoteChanges" is yes, there will also be downloaded a patch-file to the path you specified in -DownloadFolder parameter
+      - task: Bash@3
+        displayName: Fetch Changes From Cloud
+        name: latestChanges
+        env:
+          projectId: ${{ parameters.projectId }}
+          umbracoApiKey: ${{ parameters.umbracoCloudApiKey }}
+        inputs:
+          targetType: 'filePath'
+          filePath: devops/scripts/get_changes_by_id.sh
+          arguments: > 
+            $(projectId)
+            $umbracoApiKey
+            $(latestDeploymentId)
+            $(Pipeline.Workspace)/patch
+            $(pipelineVendor)
+
+      - task: Powershell@2
+        displayName: See diff content if any
+        condition: and(succeeded(), eq(variables['latestChanges.remoteChanges'], 'yes'))
+        inputs:
+          pwsh: true
+          targetType: 'inline'
+          script: Get-Content $(Pipeline.Workspace)/patch/git-patch.diff
+
+      - task: PublishPipelineArtifact@1
+        displayName: Store diff before applying
+        condition: and(succeeded(), eq(variables['latestChanges.remoteChanges'], 'yes'))
+        inputs: 
+          targetPath: $(Pipeline.Workspace)/patch/git-patch.diff
+          artifact: PatchFile
+
+  # Try to apply changes if we got any
+  - job: ApplyRemoteChanges
+    displayName: Apply Remote Changes
+    dependsOn: [ cloudSync, checkForChanges ]
+    variables:
+      latestDeploymentId: $[ dependencies.cloudSync.outputs['getLatestDeploymentId.latestDeploymentId'] ]
+      remoteChangesValue: $[ dependencies.checkForChanges.outputs['latestChanges.remoteChanges'] ]
+      gitPatchFile : $(Pipeline.Workspace)/patch/git-patch.diff
+    steps:
+      - checkout: 'self'
+        persistCredentials: true
+        clean: true
+        fetchDepth: 0
+        condition: eq(variables.remoteChangesValue, 'yes')
+
+      - task: DownloadPipelineArtifact@2
+        displayName: Get stored diff
+        inputs:
+          buildType: 'current'
+          artifactName: PatchFile
+          targetPath: $(Pipeline.Workspace)/patch
+        condition: eq(variables.remoteChangesValue, 'yes')
+      
+      # Using plain git to try an push changes back to local repo
+      # Depending on your setup you may need to change settings and permissions to better fit your needs
+      - pwsh: |
+          Write-Host "hello branch: $($env:BUILD_SOURCEBRANCHNAME)"
+          git checkout $env:BUILD_SOURCEBRANCHNAME
+          git config --global user.name "Azure Pipeline"
+          git config --global user.email "hosted.agent@dev.azure.com"
+          git apply -v $(gitPatchFile)
+          git add --all
+          git commit -m "Adding cloud changes since deployment $(latestDeploymentId) [skip ci]"
+          git push --set-upstream origin $env:BUILD_SOURCEBRANCHNAME
+        displayName: Applying git patch to branch
+        workingDirectory: $(System.DefaultWorkingDirectory)
+        condition: eq(variables.remoteChangesValue, 'yes')

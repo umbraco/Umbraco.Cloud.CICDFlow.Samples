@@ -1,19 +1,19 @@
 # Umbraco Cloud CICD Flow Samples
 Scripts and pipeline samples for the CI/CD Flow feature on Umbraco Cloud.
 
-The Scripts are provided as is - This means that the scripts will do the bare minimum for a pipeline that is utilizing the CI/CD flow.
+The Scripts are provided as is. This means that the scripts will do the bare minimum for a pipeline that is utilizing the CI/CD flow.
 The idea is that they can be integrated into your own pipelines so they will have the ability to do deployments to your Umbraco Cloud projects.
 
 ## PowerShell scripts
 You can use the same PowerShell scripts for Github and Azure Devops.
 
-- [Github Workflow using Powershell Scripts](/powershell/github/readme.md)
-- [Azure Devops using Powershell Scripts](/powershell/azuredevops/readme.md)
+- [Github Actions using Powershell Scripts](/powershell/github/readme.md)
+- [Azure DevOps using Powershell Scripts](/powershell/azuredevops/readme.md)
 
-## Work in progress
+## Bash scripts
 
-- Github Workflow using Bash Scripts
-- Azure Devops Using Bash Scripts
+- [Github Actions using Bash Scripts](/bash/github/readme.md)
+- [Azure DevOps using Bash Scripts](/bash/azuredevops/readme.md)
 
 # Further information
 

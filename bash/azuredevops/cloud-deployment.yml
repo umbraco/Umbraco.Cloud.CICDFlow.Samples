@@ -1,0 +1,90 @@
+parameters:
+  - name: projectId
+    type: string
+  - name: umbracoCloudApiKey
+
+jobs:
+  - job: prepareDeployment
+    displayName: Prepare Deployment to cloud
+    steps:
+      - script: cp cloud.gitignore .gitignore
+        displayName: Prepare Cloud Git Ignore
+        
+      - script: zip -r sources.zip . -x@cloud.zipignore
+        displayName: Zip Source Code
+
+      - publish: $(System.DefaultWorkingDirectory)/sources.zip
+        displayName: Store package for upload
+        artifact: SourcesZip
+
+  - job: callUmbracoApi
+    displayName: Upload Source And Start Deployment
+    dependsOn: prepareDeployment
+    steps:
+      - download: current
+        displayName: Get source zip from build
+        artifact: SourcesZip
+
+      # Request to prepare a deployment
+      # - sets the commit message to be used in cloud 
+      # - supplies you with a deploymentId to be used in the rest of the process
+      - task: Bash@3
+        displayName: Create Deployment Meta
+        name: deploymentMeta
+        env:
+          projectId: ${{ parameters.projectId }}
+          umbracoApiKey: ${{ parameters.umbracoCloudApiKey }}
+        inputs:
+          targetType: 'filePath'
+          filePath: devops/scripts/create_deployment.sh
+          arguments: > 
+            $(projectId)
+            $umbracoApiKey
+            "Deploying $(Build.BuildNumber)"
+            $(pipelineVendor)
+
+      # Upload your zipped artifact
+      - task: Bash@3
+        displayName: Post Zipped Artifact
+        env:
+          projectId: ${{ parameters.projectId }}
+          umbracoApiKey: ${{ parameters.umbracoCloudApiKey }}
+        inputs:
+          
+          targetType: 'filePath'
+          filePath: devops/scripts/upload_package.sh
+          arguments: > 
+            $(projectId)
+            $(deploymentId)
+            $umbracoApiKey
+            $(Pipeline.Workspace)/SourcesZip/sources.zip
+
+      # Actually request to start the deployment process in cloud
+      - task: Bash@3
+        displayName: Request Start Deployment
+        env:
+          projectId: ${{ parameters.projectId }}
+          umbracoApiKey: ${{ parameters.umbracoCloudApiKey }}
+        inputs:
+          
+          targetType: 'filePath'
+          filePath: devops/scripts/start_deployment.sh
+          arguments: > 
+            $(projectId)
+            $(deploymentId)
+            $umbracoApiKey
+
+      # Poll until deployment finishes 
+      - task: Bash@3
+        displayName: Wait for deployment completed
+        env:
+          projectId: ${{ parameters.projectId }}
+          umbracoApiKey: ${{ parameters.umbracoCloudApiKey }}
+        inputs:
+          
+          targetType: 'filePath'
+          filePath: devops/scripts/get_deployment_status.sh
+          arguments: > 
+            $(projectId)
+            $(deploymentId)
+            $umbracoApiKey
