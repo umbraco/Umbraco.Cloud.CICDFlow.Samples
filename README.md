@@ -11,6 +11,7 @@ You can use the same PowerShell scripts for Github and Azure Devops.
 - [Azure DevOps using Powershell Scripts](/powershell/azuredevops/readme.md)
 
 ## Bash scripts
+You can use the same Bash scripts for Github and Azure Devops.
 
 - [Github Actions using Bash Scripts](/bash/github/readme.md)
 - [Azure DevOps using Bash Scripts](/bash/azuredevops/readme.md)
