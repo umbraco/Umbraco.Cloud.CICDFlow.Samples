@@ -22,7 +22,7 @@ trigger:
     include:
       - main
 
-# Try to sync the local repository to get up to speed with any changes in cloud
+# Try to sync the local repository to get up to speed with any changes in Cloud project
 stages:
   - stage: cloudSyncStage
     displayName: Umbraco Cloud Sync
@@ -32,6 +32,7 @@ stages:
           projectId: $(projectId)
           umbracoCloudApiKey: $(umbracoCloudApiKey)
 
+# Package and Deploy to Umbraco Cloud
   - stage: CloudDeploymentStage
     displayName: Deploy To Cloud
     jobs: 
