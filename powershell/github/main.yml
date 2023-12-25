@@ -7,12 +7,14 @@ on:
      - main
 
 jobs:
+  # Try to sync the local repository to get up to speed with any changes in Cloud project
   cloud-sync:
     uses: ./.github/workflows/cloud-sync.yml
     secrets:
       projectId: ${{ secrets.PROJECT_ID }}
       umbracoCloudApiKey: ${{ secrets.UMBRACO_CLOUD_API_KEY }}
-
+      
+  # Package and Deploy to Umbraco Cloud
   cloud-deployment:
     needs: cloud-sync
     uses: ./.github/workflows/cloud-deployment.yml
