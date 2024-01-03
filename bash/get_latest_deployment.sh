@@ -36,10 +36,11 @@ function call_api {
   if [[ 10#$responseCode -eq 200 ]]; then
     latestDeploymentId=$(echo $content | jq -Rnr '[inputs] | join("\\n") | fromjson | .deployments[0].deploymentId')
 
-    if [[ -z $latestDeploymentId ]]; then
+    if [[ -z $latestDeploymentId || $latestDeploymentId == null ]]; then
         echo "No latest CICD Flow Deployments found"
         echo "----------------------------------------------------------------------------------------"
         echo "This is usually because you have yet to make changes to cloud through the CICD endpoints"
+        latestDeploymentId=''
     else 
         echo "Latest CICD Flow Deployment:"
         echo "$latestDeploymentId"
