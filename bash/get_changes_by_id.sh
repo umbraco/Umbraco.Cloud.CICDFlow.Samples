@@ -33,7 +33,6 @@ function get_changes {
     return
   elif [[ 10#$responseCode -eq 200 ]]; then
     echo "Changes detected"
-    $Response | Select-Object -ExpandProperty Content | Out-File "$DownloadFolder/git-patch.diff"
     remoteChanges="yes"
     return
   fi
