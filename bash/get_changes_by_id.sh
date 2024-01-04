@@ -18,12 +18,13 @@ fi
 # https://docs.umbraco.com/umbraco-cloud/set-up/project-settings/umbraco-cicd/umbracocloudapi#get-deployment-diff
 
 changeUrl="$baseUrl/v1/projects/$projectId/deployments/$deploymentId/diff"
+filePath="$downloadFolder/git-patch.diff"
 
 # Get diff - stores file as git-patch.diff
 function get_changes {
   mkdir -p $downloadFolder # ensure folder exists
   
-  responseCode=$(curl -s -w "%{http_code}" -L -o "$downloadFolder/git-patch.diff" -X GET $changeUrl \
+  responseCode=$(curl -s -w "%{http_code}" -L -o "$filePath" -X GET $changeUrl \
     -H "Umbraco-Cloud-Api-Key: $apiKey" \
     -H "Content-Type: application/json")
 
@@ -32,6 +33,14 @@ function get_changes {
     remoteChanges="no"
     return
   elif [[ 10#$responseCode -eq 200 ]]; then
+
+    if [ -z "$(cat ${filePath})" ] ## If the patchfile is empty, we treat as no change
+    then
+        echo "No Changes - You can continue"
+        remoteChanges="no"
+        return
+    fi
+
     echo "Changes detected"
     remoteChanges="yes"
     return
