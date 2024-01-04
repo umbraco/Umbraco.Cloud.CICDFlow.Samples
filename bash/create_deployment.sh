@@ -42,6 +42,7 @@ function call_api {
   echo "---Response Start---"
   echo $content
   echo "---Response End---"
+  exit 1
 }
 
 call_api
