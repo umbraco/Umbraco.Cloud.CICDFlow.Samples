@@ -12,10 +12,14 @@ param(
     $ApiKey,
     
     [Parameter(Position=3)]
+    [bool]
+    $UseHardFail = $true,
+
+    [Parameter(Position=4)]
     [int] 
     $TimeoutSeconds = 1200,
 
-    [Parameter(Position=4)]    
+    [Parameter(Position=5)]    
     [string] 
     $BaseUrl = "https://api.cloud.umbraco.com"
 )
@@ -77,6 +81,10 @@ do {
 
 $timer.Stop()
 
+if ($UseHardFail -eq $false){
+    exit 0
+}
+
 # Successfully deployed to cloud
 if ($deploymentStatus -eq 'Completed'){
     Write-Host "Deployment completed successfully"
@@ -86,7 +94,10 @@ if ($deploymentStatus -eq 'Completed'){
 # Deployment has failed
 if ($deploymentStatus -eq 'Failed'){
     Write-Host "Deployment Failed"
-    exit 1 
+    if ($UseHardFail){
+        exit 1 
+    }
+    exit 0
 }
 
 # Unexpected deployment status - considered a fail
