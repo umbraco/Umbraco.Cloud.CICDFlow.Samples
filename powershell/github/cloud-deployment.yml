@@ -1,4 +1,4 @@
-name: Deploy To Cloud
+name: Deploy To Umbraco Cloud
 
 on:
   workflow_call:
