@@ -15,9 +15,8 @@ jobs:
     name: "Synchronize with Cloud"
     uses: ./.github/workflows/cloud-sync.yml
     if: ${{ inputs.perform_sync }}
-    with:
-      projectId: ${{ secrets.PROJECT_ID }}
     secrets:
+      projectId: ${{ secrets.PROJECT_ID }}
       umbracoCloudApiKey: ${{ secrets.UMBRACO_CLOUD_API_KEY }}
 
   # this job is here to prevent deployment to start before the optional cloud-sync job has been done
@@ -35,7 +34,6 @@ jobs:
     uses: ./.github/workflows/cloud-deployment.yml
     needs: conditional-flow
     if: always()
-    with:
-      projectId: ${{ secrets.PROJECT_ID }}
     secrets:
+      projectId: ${{ secrets.PROJECT_ID }}
       umbracoCloudApiKey: ${{ secrets.UMBRACO_CLOUD_API_KEY }}
