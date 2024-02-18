@@ -2,7 +2,10 @@
 Quick setup for GitHub Actions using bash scripts to interact with the Umbraco Cloud CI/CD Flow endpoints.
 
 1. Place the [`cloud.zipignore`](../../cloud.zipignore) from the root of this repository, in the root of your repository.
-2. Copy the yaml-scripts from this folder into your `.github/workflows` folder.
+2. Copy the following yaml-scripts from this folder into your `.github/workflows` folder:
+    - `main.yml`
+    - `cloud-sync.yml`
+    - `cloud-deployment.yml`
 3. Bash scripts should be placed in `.github/scripts`.
     - Feel free to place scripts somewhere else, but you need to update the paths in the `cloud-sync.yml` and `cloud-deployment.yml`
 4. Make a copy of the `.gitignore` from the Cloud Project Repository (not from this sample repository)
@@ -14,9 +17,9 @@ A couple of workflows you are able to trigger manually, which are designed to he
 
 If you want to use the workflows, you need to copy the files to your own repository's `.github/workflows` folder.
 
-Currently only available for GitHub with PowerShell scripts.
+Currently only available for GitHub.
 
-### manual-deployment.yml (Work in progress)
+### manual-deployment.yml
 Allows you to manually trigger a deployment to cloud. Via a toggle you are able to skip the "cloud-sync" section of the pipeline. 
 
 This is helpful if the "cloud-sync" somehow is blocking a deployment, due to changes from cloud cannot be applied back to local repository, because this already happened previously, but the deployment failed. 

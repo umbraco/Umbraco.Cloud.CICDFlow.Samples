@@ -15,7 +15,7 @@ jobs:
         name: Get Deployment Status Manually
         runs-on: ubuntu-latest
         env: 
-            projectId: ${{ vars.PROJECT_ID}}
+            projectId: ${{ secrets.PROJECT_ID}}
             apiKey: ${{ secrets.UMBRACO_CLOUD_API_KEY}}
             deploymentId: ${{ inputs.deployment_id }}
         steps:

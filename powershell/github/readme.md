@@ -12,15 +12,14 @@ Quick setup for GitHub Actions using PowerShell scripts to interact with the Umb
     a. Call the copy `cloud.gitignore`
     b. place both files in the root of your repository
 
-
 ## Manually triggered workflows
 A couple of workflows you are able to trigger manually, which are designed to help resolve deployment issues you might encounter.
 
 If you want to use the workflows, you need to copy the files to your own repository's `.github/workflows` folder.
 
-Currently only available for GitHub with PowerShell scripts.
+Currently only available for GitHub.
 
-### manual-deployment.yml (Work in progress)
+### manual-deployment.yml
 Allows you to manually trigger a deployment to cloud. Via a toggle you are able to skip the "cloud-sync" section of the pipeline. 
 
 This is helpful if the "cloud-sync" somehow is blocking a deployment, due to changes from cloud cannot be applied back to local repository, because this already happened previously, but the deployment failed. 
