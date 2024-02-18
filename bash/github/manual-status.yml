@@ -18,13 +18,10 @@ jobs:
             projectId: ${{ vars.PROJECT_ID}}
             apiKey: ${{ secrets.UMBRACO_CLOUD_API_KEY}}
             deploymentId: ${{ inputs.deployment_id }}
-        steps:
-            - uses: actions/checkout@v4
-            - name: Get status of deployment 
-              shell: pwsh
-              run: >
-                ${{GITHUB.WORKSPACE}}/.github/powershell/Test-DeploymentStatus.ps1 
-                -ProjectId ${{ env.projectId }} 
-                -DeploymentId ${{ env.deploymentId }} 
-                -ApiKey ${{ env.apiKey }}
-                -UseHardFail 0
+        run: >
+          bash ${{GITHUB.WORKSPACE}}/.github/scripts/get_deployment_status.sh 
+          ${{ env.projectId }} 
+          ${{ env.deploymentId }} 
+          ${{ env.apiKey }}
+          "false"
+        

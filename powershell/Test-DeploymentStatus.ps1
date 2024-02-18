@@ -94,10 +94,7 @@ if ($deploymentStatus -eq 'Completed'){
 # Deployment has failed
 if ($deploymentStatus -eq 'Failed'){
     Write-Host "Deployment Failed"
-    if ($UseHardFail){
-        exit 1 
-    }
-    exit 0
+    exit 1 
 }
 
 # Unexpected deployment status - considered a fail

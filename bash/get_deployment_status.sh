@@ -5,11 +5,19 @@ projectId="$1"
 deploymentId="$2"
 apiKey="$3"
 
+# Not required, defaults to true
+# Expects string: "true" or "false"
+useHardFail="$4"
+
 # Not required, defaults to 1200
-timeoutSeconds="$4"
+timeoutSeconds="$5"
 
 # Not required, defaults to https://api.cloud.umbraco.com
-baseUrl="$5" 
+baseUrl="$6" 
+
+if [[ -z "$useHardFail" ]]; then
+  useHardFail="true"
+fi
 
 if [[ -z "$timeoutSeconds" ]]; then
   timeoutSeconds=1200
@@ -66,6 +74,10 @@ while [[ $status == "Pending" || $status == "InProgress" || $status == "Queued" 
     sleep 15
   fi
 done
+
+if [[ $useHardFail == "false" ]]; then
+  exit 0
+fi
 
 # Successfully deployed to cloud
 if [[ $status == "Completed" ]]; then
