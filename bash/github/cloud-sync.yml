@@ -19,7 +19,7 @@ jobs:
     steps:
       # Gets the latest CICD Flow deployment if there is any
       # Will write "latestDeploymentId" to pipeline variables, value can be an uuid or empty string 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Get Latest Deployment
         id: latest-deployment
         shell: bash
@@ -37,7 +37,7 @@ jobs:
     needs: preflight
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       # Download git-patch file based on latest deployment
       # Will write "remoteChanges" to pipeline variables, value can be "yes" or "no"
       # When "remoteChanges" is yes, there will also be downloaded a patch-file to the path you specified in -DownloadFolder parameter
@@ -62,7 +62,7 @@ jobs:
 
       - name: Store diff before applying
         if: ${{ steps.latest-changes.outputs.remoteChanges == 'yes' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: git-patch
           path: ${{GITHUB.WORKSPACE}}/patch/git-patch.diff
@@ -86,7 +86,7 @@ jobs:
         env:
           remoteChanges: ${{ needs.checkForChanges.outputs.remoteChanges }}
         if: ${{ env.remoteChanges == 'yes' }}
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: git-patch
           path: ${{GITHUB.WORKSPACE}}/patch
