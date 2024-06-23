@@ -12,22 +12,22 @@ Quick setup for GitHub Actions using bash scripts to interact with the Umbraco C
     a. Call the copy `cloud.gitignore`
     b. place both files in the root of your repository
 
-## Manually triggered workflows
-A couple of workflows you are able to trigger manually, which are designed to help resolve deployment issues you might encounter.
+## Alternative to main.yml
+The `main.yml` workflow always automatically triggers when pushed to `main` branch. It will always try to run the two jobs `cloud-sync` and `cloud-deployment`.
 
-If you want to use the workflows, you need to copy the files to your own repository's `.github/workflows` folder.
+In some instances you may want to manually trigger a deployment and optionally skip the `cloud-sync` job, and here the `main-with-manual-trigger.yml` workflow comes in handy.
 
-Currently only available for GitHub.
+It will allow you to manually trigger a deployment to cloud. Via a toggle you are able to skip the "cloud-sync" section of the pipeline. 
 
-### manual-deployment.yml
-Allows you to manually trigger a deployment to cloud. Via a toggle you are able to skip the "cloud-sync" section of the pipeline. 
+All you need to do is copy `main-with-manual-trigger.yml` into your `.github/workflows` folder.
 
-This is helpful if the "cloud-sync" somehow is blocking a deployment, due to changes from cloud cannot be applied back to local repository, because this already happened previously, but the deployment failed. 
+The `main-with-manual-trigger.yml` workflow is prepared to also be able to trigger automatically:
+1. Make sure `main.yml` (the old one) will not trigger - you can delete it or rename the extension.
+2. In `main-with-manual-trigger.yml` workflow uncomment lines 5 to 9.
+3. optionally rename the new pipeline to `main.yml` or what you like, but keep the 'yml-extension'.
 
-### manual-status.yml
-Allows you to run a deployment status check on a given deployment id. 
-This can be helpful if you need to determine if a deployment is still active or if it completed (by failure or success).
+# Deployment Status
+You can check any CICD deployment status by a given deployment id. 
+This can be helpful if you need to determine if a deployment is still active or if it completed (by failure or success) without having to run and wait for a new deployment.
 
-This corresponds to calling the [Get Deployment Status endpoint](https://docs.umbraco.com/umbraco-cloud/set-up/project-settings/umbraco-cicd/umbracocloudapi#get-deployment-status).  
-
-Requires the updated `get_deployment_status.sh` script from this branch.
+You need to call the [Get Deployment Status endpoint](https://docs.umbraco.com/umbraco-cloud/set-up/project-settings/umbraco-cicd/umbracocloudapi#get-deployment-status), in your favorite tool, like Postman or similar.
