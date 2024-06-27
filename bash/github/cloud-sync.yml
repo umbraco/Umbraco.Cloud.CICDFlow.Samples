@@ -2,12 +2,16 @@ name: Umbraco Cloud Sync
 
 on:
   workflow_call:
+    outputs:
+      newSha:
+        description: 'The new SHA hash if there was a patch'
+        value: ${{ jobs.applyRemoteChanges.outputs.newSha }}
     secrets:
-      projectId: 
+      projectId:
         required: true
       umbracoCloudApiKey:
         required: true
-  
+
 env:
   projectId: ${{ secrets.projectId }}
   umbracoCloudApiKey: ${{ secrets.umbracoCloudApiKey }}
@@ -18,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Gets the latest CICD Flow deployment if there is any
-      # Will write "latestDeploymentId" to pipeline variables, value can be an uuid or empty string 
+      # Will write "latestDeploymentId" to pipeline variables, value can be an uuid or empty string
       - uses: actions/checkout@v4
       - name: Get Latest Deployment
         id: latest-deployment
@@ -28,8 +32,8 @@ jobs:
           ${{ env.projectId }} 
           ${{ env.umbracoCloudApiKey }} 
           GITHUB
-         
-    outputs: 
+
+    outputs:
       latestDeployemntId: ${{ steps.latest-deployment.outputs.latestDeploymentId }}
 
   checkForChanges:
@@ -68,7 +72,7 @@ jobs:
           path: ${{GITHUB.WORKSPACE}}/patch/git-patch.diff
           retention-days: 1
     outputs:
-      remoteChanges: ${{ steps.latest-changes.outputs.remoteChanges }}  
+      remoteChanges: ${{ steps.latest-changes.outputs.remoteChanges }}
 
   applyRemoteChanges:
     name: Apply remote changes
@@ -90,12 +94,13 @@ jobs:
         with:
           name: git-patch
           path: ${{GITHUB.WORKSPACE}}/patch
-      
+
       # Using plain git to try an push changes back to local repo
       # Depending on your setup you may need to change settings and permissions to better fit your needs
       # This targets the same branch as the pipeline was triggered on.
-      # Stopping a new pipeline run by using the "[skip ci]" as part of commit message 
+      # Stopping a new pipeline run by using the "[skip ci]" as part of commit message
       - name: Applying git patch to branch
+        id: update-bundle
         env:
           remoteChanges: ${{ needs.checkForChanges.outputs.remoteChanges }}
           latestDeploymentId: ${{ needs.preflight.outputs.latestDeployemntId }}
@@ -103,7 +108,20 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git apply ${{GITHUB.WORKSPACE}}/patch/git-patch.diff
-          git add *
-          git commit -m "Adding cloud changes since deployment ${{ env.latestDeploymentId }} [skip ci]"
-          git push
+          # Check if the patch has been applied already, skip if it has
+          if git apply ${{GITHUB.WORKSPACE}}/patch/git-patch.diff --reverse --check; then
+            echo "Patch already applied, exit"
+            exit 0
+          # check if the patch can be applied
+          elif git apply ${{GITHUB.WORKSPACE}}/patch/git-patch.diff --check; then
+            echo "Patch needed, trying now"
+            git apply ${{GITHUB.WORKSPACE}}/patch/git-patch.diff 
+            git add *
+            git commit -m "Adding cloud changes since deployment ${{ env.latestDeploymentId }} [skip ci]"
+            git push
+            # record the new sha for the deploy
+            updatedSha=$(git rev-parse HEAD)
+            echo "updatedSha" >> "$GITHUB_OUTPUT"
+          fi
+    outputs:
+      newSha: ${{ steps.update-bundle.outputs.updatedSha }}
