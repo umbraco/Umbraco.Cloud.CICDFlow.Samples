@@ -32,7 +32,7 @@ jobs:
     name: "Deploy to Cloud"
     uses: ./.github/workflows/cloud-deployment.yml
     needs: cloud-sync
-    if: ${{ success() || inputs.perform_sync == false}}
+    if: ${{ success() || ( GITHUB.EVENT_NAME == 'workflow_dispatch' && inputs.perform_cloud_sync == false) }}
     secrets:
       projectId: ${{ secrets.PROJECT_ID }}
       umbracoCloudApiKey: ${{ secrets.UMBRACO_CLOUD_API_KEY }}
