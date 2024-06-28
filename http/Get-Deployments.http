@@ -1,0 +1,12 @@
+### Edit the Project Id and the API Key in the .vscode/settings.json file
+@BaseRequestUrl = https://api.{{BaseUrl}}/v1/projects/{{ProjectId}}
+
+### Get latest Deployment // Query deployments
+# Query parameters - you can change these
+@Skip = 0
+@Take = 1
+@IncludeNullDeployments = false
+
+GET {{BaseRequestUrl}}/deployments?skip={{Skip}}&take={{Take}}&includenulldeployments={{IncludeNullDeployments}}
+Umbraco-Cloud-Api-Key: {{ApiKey}}
+Content-Type: application/json

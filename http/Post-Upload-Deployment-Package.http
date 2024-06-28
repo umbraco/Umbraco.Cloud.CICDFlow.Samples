@@ -1,0 +1,19 @@
+### Edit the Project Id and the API Key in the .vscode/settings.json file
+@BaseRequestUrl = https://api.{{BaseUrl}}/v1/projects/{{ProjectId}}
+
+### Upload Package --- This uses MultiPart Form-Data, Might be easier to use another tool to test this
+# Use the new deployment Id created in Post-Create-Deployment 
+@FreshDeploymentId = 
+
+# Use relative path
+@File = 
+
+POST {{BaseRequestUrl}}/deployments/{{FreshDeploymentId}}/package HTTP/1.1
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+Umbraco-Cloud-Api-Key: {{ApiKey}}
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="{{FreshDeploymentId}}.zip"
+Content-Type: image/png
+
+< {{File}}
+------WebKitFormBoundary7MA4YWxkTrZu0gW--

@@ -1,0 +1,15 @@
+### Edit the Project Id and the API Key in the .vscode/settings.json file
+@BaseRequestUrl = https://api.{{BaseUrl}}/v1/projects/{{ProjectId}}
+
+### Create a new Deployment (Deployment Meta)
+### Here you get the Deployment Id you need for uploading and starting the deployment
+# Commit message you want in the cloud repo - 
+@CommitMessage = 
+
+POST {{BaseRequestUrl}}/deployments HTTP/1.1
+Umbraco-Cloud-Api-Key: {{ApiKey}}
+Content-Type: application/json
+
+{
+    "commitMessage": "{{CommitMessage}}"
+}

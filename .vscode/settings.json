@@ -1,0 +1,10 @@
+{
+    "rest-client.environmentVariables": {
+        "$shared": {
+            "ApiKey": "",
+            "ProjectId": "",
+            "BaseUrl" : "cloud.umbraco.com" 
+        }
+
+    },
+}
