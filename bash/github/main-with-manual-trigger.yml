@@ -1,12 +1,15 @@
 name: 🚀 Automatic or 🏎️ Manual Umbraco Cloud Deployment
 
 # Automatically triggered by pushing to main, all job will run 
-# uncomment line 5 to 9
+# uncomment line 8 to 10 and the line with the branch-name that 
+# should trigger the deployment process.
+# Or add your own
 on:
 #  push:
 #    name: 🚀 Umbraco Cloud Deployment pipeline
 #    branches:
 #     - main
+#     - master
 # Allows a manually triggered workflow run 
 # where you can optionally skip the cloud-sync job
   workflow_dispatch:
