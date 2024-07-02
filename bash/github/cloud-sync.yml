@@ -95,6 +95,7 @@ jobs:
       # Depending on your setup you may need to change settings and permissions to better fit your needs
       # This targets the same branch as the pipeline was triggered on.
       # Stopping a new pipeline run by using the "[skip ci]" as part of commit message 
+      #  --ignore-space-change --ignore-whitespace on the git apply allows for minor changes due to OS environment.
       - name: Applying git patch to branch
         env:
           remoteChanges: ${{ needs.checkForChanges.outputs.remoteChanges }}
@@ -103,7 +104,7 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git apply ${{GITHUB.WORKSPACE}}/patch/git-patch.diff
+          git apply ${{GITHUB.WORKSPACE}}/patch/git-patch.diff --ignore-space-change --ignore-whitespace
           git add *
           git commit -m "Adding cloud changes since deployment ${{ env.latestDeploymentId }} [skip ci]"
           git push
