@@ -89,12 +89,13 @@ jobs:
       
       # Using plain git to try an push changes back to local repo
       # Depending on your setup you may need to change settings and permissions to better fit your needs
+      #  --ignore-space-change --ignore-whitespace on the git apply allows for minor changes due to OS environment.
       - pwsh: |
           Write-Host "hello branch: $($env:BUILD_SOURCEBRANCHNAME)"
           git checkout $env:BUILD_SOURCEBRANCHNAME
           git config --global user.name "Azure Pipeline"
           git config --global user.email "hosted.agent@dev.azure.com"
-          git apply -v $(gitPatchFile)
+          git apply -v $(gitPatchFile) --ignore-space-change --ignore-whitespace
           git add --all
           git commit -m "Adding cloud changes since deployment $(latestDeploymentId) [skip ci]"
           git push --set-upstream origin $env:BUILD_SOURCEBRANCHNAME
