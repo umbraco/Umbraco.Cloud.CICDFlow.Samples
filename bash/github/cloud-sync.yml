@@ -124,7 +124,8 @@ jobs:
             git push
             # record the new sha for the deploy
             updatedSha=$(git rev-parse HEAD)
-            echo "updatedSha" >> "$GITHUB_OUTPUT"
+            echo "Updated SHA: $updatedSha"
+            echo "updatedSha=$updatedSha" >> "$GITHUB_OUTPUT"
           fi
     outputs:
       newSha: ${{ steps.update-bundle.outputs.updatedSha }}
