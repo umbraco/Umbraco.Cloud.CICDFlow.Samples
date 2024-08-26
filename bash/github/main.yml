@@ -4,7 +4,7 @@ name: pipeline
 on:
   push:
     branches:
-     - main
+      - main
 
 jobs:
   # Try to sync the local repository to get up to speed with any changes in Cloud project
@@ -18,6 +18,8 @@ jobs:
   cloud-deployment:
     needs: cloud-sync
     uses: ./.github/workflows/cloud-deployment.yml
+    with:
+      newSha: ${{ needs.cloud-sync.outputs.newSha }}
     secrets:
-      projectId: ${{ secrets.PROJECT_ID }}
-      umbracoCloudApiKey: ${{ secrets.UMBRACO_CLOUD_API_KEY }}
+      PROJECT_ID: ${{ secrets.PROJECT_ID }}
+      UMBRACO_CLOUD_API_KEY: ${{ secrets.UMBRACO_CLOUD_API_KEY }}
