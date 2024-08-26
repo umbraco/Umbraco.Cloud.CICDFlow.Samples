@@ -1,1 +1,6 @@
+## (Using Jedi powers) This it not the gitignore you are looking for
+## This is the .gitignore for the samples repository
+## - you want the .gitignore from your cloud environment repository
+##
+## So please ignore this gitignore :) 
 **/.DS_Store
