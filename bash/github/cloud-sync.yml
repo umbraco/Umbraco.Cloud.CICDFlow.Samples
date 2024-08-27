@@ -34,7 +34,7 @@ jobs:
           GITHUB
 
     outputs:
-      latestDeployemntId: ${{ steps.latest-deployment.outputs.latestDeploymentId }}
+      latestDeploymentId: ${{ steps.latest-deployment.outputs.latestDeploymentId }}
 
   checkForChanges:
     name: Check if there are changes since latest deployment
@@ -47,7 +47,7 @@ jobs:
       # When "remoteChanges" is yes, there will also be downloaded a patch-file to the path you specified in -DownloadFolder parameter
       - name: Fetch Changes From Cloud
         env:
-          latestDeploymentId: ${{ needs.preflight.outputs.latestDeployemntId }}
+          latestDeploymentId: ${{ needs.preflight.outputs.latestDeploymentId }}
         if: ${{ env.latestDeploymentId != '' }}
         id: latest-changes
         shell: bash
@@ -99,33 +99,24 @@ jobs:
       # Depending on your setup you may need to change settings and permissions to better fit your needs
       # This targets the same branch as the pipeline was triggered on.
 
-      # Stopping a new pipeline run by using the "[skip ci]" as part of commit message
-      #  --ignore-space-change --ignore-whitespace on the git apply allows for minor changes due to OS environment.
+      ## You can change the gitName and gitEmail to whatever you want, this will show up in you git history on
+      ## changes coming from Umbraco Cloud
 
-      - name: Applying git patch to branch
+      - name: Applying git patch to branch (bash)
         id: update-bundle
         env:
           remoteChanges: ${{ needs.checkForChanges.outputs.remoteChanges }}
-          latestDeploymentId: ${{ needs.preflight.outputs.latestDeployemntId }}
+          latestDeploymentId: ${{ needs.preflight.outputs.latestDeploymentId }}
+          gitName: github-actions
+          gitEmail: github-actions@github.com
         if: ${{ env.remoteChanges == 'yes' }}
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          # Check if the patch has been applied already, skip if it has
-          if git apply ${{GITHUB.WORKSPACE}}/patch/git-patch.diff --reverse --ignore-space-change --ignore-whitespace --check; then
-            echo "Patch already applied, exit"
-            exit 0
-          # check if the patch can be applied
-          elif git apply ${{GITHUB.WORKSPACE}}/patch/git-patch.diff --ignore-space-change --ignore-whitespace --check; then
-            echo "Patch needed, trying now"
-            git apply ${{GITHUB.WORKSPACE}}/patch/git-patch.diff --ignore-space-change --ignore-whitespace
-            git add *
-            git commit -m "Adding cloud changes since deployment ${{ env.latestDeploymentId }} [skip ci]"
-            git push
-            # record the new sha for the deploy
-            updatedSha=$(git rev-parse HEAD)
-            echo "Updated SHA: $updatedSha"
-            echo "updatedSha=$updatedSha" >> "$GITHUB_OUTPUT"
-          fi
+        shell: bash
+        run: >
+          bash ${{GITHUB.WORKSPACE}}/.github/scripts/apply_patch.sh 
+          ${{ GITHUB.WORKSPACE }}/patch/git-patch.diff 
+          ${{ env.latestDeploymentId }} 
+          GITHUB
+          ${{ env.gitName }}
+          ${{ env.gitEmail }}
     outputs:
       newSha: ${{ steps.update-bundle.outputs.updatedSha }}
