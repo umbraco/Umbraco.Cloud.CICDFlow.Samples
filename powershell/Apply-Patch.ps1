@@ -23,6 +23,12 @@ param (
 git config user.name $GitUserName
 git config user.email $GitUserEmail
 
+If ($PipelineVendor -eq "AZUREDEVOPS"){
+    # we need to checkout the specific branch to be able to commit bad to repo in Azure DevOps
+    git checkout $env:BUILD_SOURCEBRANCHNAME
+}
+
+
 Write-Host "Testing the patch"
 # Check if the patch has been applied already, skip if it has
 git apply $PatchFile --reverse --ignore-space-change --ignore-whitespace --check
@@ -39,19 +45,25 @@ git apply $PatchFile --ignore-space-change --ignore-whitespace --check
 If ($LASTEXITCODE -eq 0) {
     Write-Host "Patch needed, trying now"
     git apply $PatchFile --ignore-space-change --ignore-whitespace
-    git add *
-    git commit -m "Adding cloud changes since deployment $LatestDeploymentId [skip ci]"
-    git push
-    # Record the new sha for the deploy
-    $updatedSha = git rev-parse HEAD
-    Write-Host "Updated SHA: $updatedSha"
 
     switch ($PipelineVendor) {
         "GITHUB" {
+            git add *
+            git commit -m "Adding cloud changes since deployment $LatestDeploymentId [skip ci]"
+            git push
+            $updatedSha = git rev-parse HEAD
+            
+            # Record the new sha for the deploy
             "updatedSha=$($updatedSha)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
         }
         "AZUREDEVOPS" {
-            Write-Host "##vso[task.setvariable variable=updatedSha;]$($updatedSha)"
+            git add --all
+            git commit -m "Adding cloud changes since deployment $LatestDeploymentId [skip ci]"
+            git push --set-upstream origin $env:BUILD_SOURCEBRANCHNAME
+            $updatedSha = git rev-parse HEAD
+
+            # Record the new sha for the deploy
+            Write-Host "##vso[task.setvariable variable=updatedSha;isOutput=true]$($updatedSha)"
         }
         "TESTRUN" {
             Write-Host $PipelineVendor
@@ -62,6 +74,7 @@ If ($LASTEXITCODE -eq 0) {
             Exit 1
         }
     }
+    Write-Host "Updated SHA: $updatedSha"
     Exit 0
 } Else {
     Write-Host ""
