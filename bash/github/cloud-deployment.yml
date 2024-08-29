@@ -59,7 +59,7 @@ jobs:
           name: source-artifact
 
       # Request to prepare a deployment
-      # - sets the commit message to be used in cloud
+      # - sets the commit message to be used in cloud 
       # - supplies you with a deploymentId to be used in the rest of the process
       - name: Create Deployment Meta
         id: deployment-meta

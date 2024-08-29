@@ -1,6 +1,12 @@
 name: Deploy To Cloud
 
 on:
+  workflow_dispatch:
+    inputs:
+      newSha:
+        required: false
+        type: string
+
   workflow_call:
     inputs:
       newSha:
@@ -37,12 +43,12 @@ jobs:
           name: source-artifact
           path: ${{GITHUB.WORKSPACE}}/sources.zip
           retention-days: 1
-    
+
   callUmbracoApi:
     name: Upload Source And Start Deployment
     runs-on: ubuntu-latest
     needs: prepareDeployment
-    outputs: 
+    outputs:
       runningDeploymentId: ${{ steps.deployment-meta.outputs.deploymentId }}
     steps:
       - uses: actions/checkout@v4

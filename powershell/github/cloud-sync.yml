@@ -11,7 +11,7 @@ on:
         required: true
       umbracoCloudApiKey:
         required: true
-  
+
 env:
   projectId: ${{ secrets.projectId }}
   umbracoCloudApiKey: ${{ secrets.umbracoCloudApiKey }}
@@ -93,7 +93,7 @@ jobs:
         with:
           name: git-patch
           path: ${{GITHUB.WORKSPACE}}/patch
-          
+
       # Using plain git to try an push changes back to local repo
       # Depending on your setup you may need to change settings and permissions to better fit your needs
       # This targets the same branch as the pipeline was triggered on.

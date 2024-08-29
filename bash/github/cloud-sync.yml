@@ -102,7 +102,7 @@ jobs:
       ## You can change the gitName and gitEmail to whatever you want, this will show up in you git history on
       ## changes coming from Umbraco Cloud
 
-      - name: Applying git patch to branch (bash)
+      - name: Applying git patch to branch
         id: update-bundle
         env:
           remoteChanges: ${{ needs.checkForChanges.outputs.remoteChanges }}
