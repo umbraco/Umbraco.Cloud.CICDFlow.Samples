@@ -60,8 +60,8 @@ jobs:
         shell: pwsh
         run: >
           ${{GITHUB.WORKSPACE}}/.github/powershell/New-Deployment.ps1 
-          -ProjectId ${{ env.projectId }} 
-          -ApiKey ${{ env.umbracoCloudApiKey }} 
+          -ProjectId ${{ secrets.PROJECT_ID }} 
+          -ApiKey ${{ secrets.UMBRACO_CLOUD_API_KEY }} 
           -CommitMessage "Run number ${{github.run_number}}" 
           -PipelineVendor GITHUB
 
@@ -70,9 +70,9 @@ jobs:
         shell: pwsh
         run: >
           ${{GITHUB.WORKSPACE}}/.github/powershell/Add-DeploymentPackage.ps1 
-          -ProjectId ${{ env.projectId }} 
+          -ProjectId ${{ secrets.PROJECT_ID }} 
           -DeploymentId ${{ steps.deployment-meta.outputs.deploymentId }} 
-          -ApiKey ${{ env.umbracoCloudApiKey }} 
+          -ApiKey ${{ secrets.UMBRACO_CLOUD_API_KEY }} 
           -FilePath ${{ GITHUB.WORKSPACE }}/sources.zip
 
       # Actually request to start the deployment process in cloud
@@ -80,9 +80,9 @@ jobs:
         shell: pwsh
         run: >
           ${{GITHUB.WORKSPACE}}/.github/powershell/Start-Deployment.ps1 
-          -ProjectId ${{ env.projectId }} 
+          -ProjectId ${{ secrets.PROJECT_ID }} 
           -DeploymentId ${{ steps.deployment-meta.outputs.deploymentId }} 
-          -ApiKey ${{ env.umbracoCloudApiKey }}
+          -ApiKey ${{ secrets.UMBRACO_CLOUD_API_KEY }}
 
   awaitDeploymentFinished:
     name: Await deployment to finish
@@ -98,6 +98,6 @@ jobs:
           runningDeploymentId: ${{ needs.callUmbracoApi.outputs.runningDeploymentId }}
         run: >
           ${{GITHUB.WORKSPACE}}/.github/powershell/Test-DeploymentStatus.ps1 
-          -ProjectId ${{ env.projectId }} 
+          -ProjectId ${{ secrets.PROJECT_ID }} 
           -DeploymentId ${{ env.runningDeploymentId }} 
-          -ApiKey ${{ env.umbracoCloudApiKey }}
+          -ApiKey ${{ secrets.UMBRACO_CLOUD_API_KEY }}
