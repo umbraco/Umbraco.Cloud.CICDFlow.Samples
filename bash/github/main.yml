@@ -9,6 +9,7 @@ on:
 jobs:
   # Try to sync the local repository to get up to speed with any changes in Cloud project
   cloud-sync:
+    name: "Syncronize with Cloud"
     uses: ./.github/workflows/cloud-sync.yml
     secrets:
       projectId: ${{ secrets.PROJECT_ID }}
@@ -16,6 +17,7 @@ jobs:
 
   # Package and Deploy to Umbraco Cloud
   cloud-deployment:
+    name: "Deploy to Cloud"
     needs: cloud-sync
     uses: ./.github/workflows/cloud-deployment.yml
     with:
