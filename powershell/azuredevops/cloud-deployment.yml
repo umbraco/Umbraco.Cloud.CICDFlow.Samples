@@ -2,12 +2,29 @@ parameters:
   - name: projectId
     type: string
   - name: umbracoCloudApiKey
-
+  - name: newCommitSha
+    type: string
+    default: ''
 
 jobs:
   - job: prepareDeployment
     displayName: Prepare Deployment to cloud
     steps:
+      - checkout: 'self'
+        persistCredentials: true
+        fetchDepth: 2
+        displayName: Check out
+               
+      - script: |
+          if [ -n "$(newCommitSha)" ]; then
+            echo "Including the latest incoming changes"
+            git fetch
+            git checkout $(newCommitSha)
+          fi
+        env:
+          newCommitSha: ${{ parameters.newCommitSha }}
+        displayName: 'Checking out updated repo'
+
       # switch the gitignore files so cloud does not ignore the build frontend assets
       - script: cp cloud.gitignore .gitignore
         displayName: Prepare Cloud Git Ignore

@@ -86,10 +86,11 @@ jobs:
           artifactName: PatchFile
           targetPath: $(Pipeline.Workspace)/patch
         condition: eq(variables.remoteChangesValue, 'yes')
-      
+        
       # Using plain git to try an push changes back to local repo
       # Depending on your setup you may need to change settings and permissions to better fit your needs
-      #  --ignore-space-change --ignore-whitespace on the git apply allows for minor changes due to OS environment.
+      # This targets the same branch as the pipeline was triggered on.
+      # Stopping a new pipeline run by using the "[skip ci]" as part of commit message 
       - pwsh: |
           Write-Host "hello branch: $($env:BUILD_SOURCEBRANCHNAME)"
           git checkout $env:BUILD_SOURCEBRANCHNAME
