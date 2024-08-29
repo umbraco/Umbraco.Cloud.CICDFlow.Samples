@@ -4,25 +4,15 @@
 patchFile="$1"
 latestDeploymentId="$2"
 pipelineVendor="$3"
-
-# Not required, defaults to:
-gitUserName="$4" # github-actions
-gitUserEmail="$5"  # github-actions@github.com
-
-if [[ -z "$gitUserName" ]]; then
-    gitUserName="github-actions"
-fi
-
-if [[ -z "$gitUserEmail" ]]; then
-    gitUserEmail="github-actions@github.com"
-fi
+gitUserName="$4"
+gitUserEmail="$5"  
 
 git config user.name "$gitUserName"
 git config user.email "$gitUserEmail"
 
 if [[ "$pipelineVendor" == "AZUREDEVOPS" ]]; then
+    # we need to checkout the specific branch to be able to commit bad to repo in Azure DevOps
     git checkout ${BUILD_SOURCEBRANCHNAME}
-    exit 0
 fi
 
 echo "Testing the patch - errors might show up, and that is okay"
@@ -31,9 +21,13 @@ echo "=========================================================="
 if git apply "$patchFile" --reverse --ignore-space-change --ignore-whitespace --check; then
     echo "Patch already applied === concluding the apply patch part"
     exit 0
+else
+    echo "Patch not applied yet"    
+fi
 
+echo "Checking if patch can be applied..."
 # check if the patch can be applied
-elif git apply "$patchFile" --ignore-space-change --ignore-whitespace --check; then
+if git apply "$patchFile" --ignore-space-change --ignore-whitespace --check; then
     echo "Patch needed, trying to apply now"
     echo "================================="
     git apply "$patchFile" --ignore-space-change --ignore-whitespace
@@ -43,6 +37,7 @@ elif git apply "$patchFile" --ignore-space-change --ignore-whitespace --check; t
         git add *
         git commit -m "Adding cloud changes since deployment $latestDeploymentId [skip ci]"
         git push
+
         # record the new sha for the deploy
         updatedSha=$(git rev-parse HEAD)
         echo "updatedSha=$updatedSha" >> "$GITHUB_OUTPUT"
@@ -51,7 +46,9 @@ elif git apply "$patchFile" --ignore-space-change --ignore-whitespace --check; t
         git add --all
         git commit -m "Adding cloud changes since deployment $latestDeploymentId [skip ci]"
         git push --set-upstream origin ${BUILD_SOURCEBRANCHNAME}
-        $updatedSha = git rev-parse HEAD
+        
+        # Record the new sha for the deploy
+        updatedSha=$(git rev-parse HEAD)
         echo "##vso[task.setvariable variable=updatedSha;isOutput=true]$updatedSha"
         
     elif [[ "$pipelineVendor" == "TESTRUN" ]]; then
@@ -62,13 +59,17 @@ elif git apply "$patchFile" --ignore-space-change --ignore-whitespace --check; t
         echo "Currently supported are: GITHUB and AZUREDEVOPS"
         Exit 1
     fi
+    echo "Changes are applied successfully"
+    echo ""
     echo "Updated SHA: $updatedSha"
     exit 0
 
 # Handle the case where the patch cannot be applied
 else
+    echo ""
     echo "Patch cannot be applied - please check the output below for the problematic parts"
     echo "================================================================================="
-    git apply --reject "$patchFile" --ignore-space-change --ignore-whitespace --check
+    echo ""
+    git apply -v --reject "$patchFile" --ignore-space-change --ignore-whitespace --check
     exit 1
 fi

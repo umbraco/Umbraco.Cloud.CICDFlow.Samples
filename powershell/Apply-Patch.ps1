@@ -13,11 +13,11 @@ param (
 
     [Parameter(Position=3)]
     [string]
-    $GitUserName = "github-actions",
+    $GitUserName,
     
     [Parameter(Position=4)]
     [string]
-    $GitUserEmail = "github-actions@github.com"
+    $GitUserEmail
 )
 
 git config user.name $GitUserName
@@ -28,12 +28,12 @@ If ($PipelineVendor -eq "AZUREDEVOPS"){
     git checkout $env:BUILD_SOURCEBRANCHNAME
 }
 
-
-Write-Host "Testing the patch"
+Write-Host "Testing the patch - errors might show up, and that is okay"
+Write-Host "=========================================================="
 # Check if the patch has been applied already, skip if it has
 git apply $PatchFile --reverse --ignore-space-change --ignore-whitespace --check
 If ($LASTEXITCODE -eq 0) {
-    Write-Host "Patch already applied => concluding the apply patch part"
+    Write-Host "Patch already applied === concluding the apply patch part"
     Exit 0
 } Else {
     Write-Host "Patch not applied yet"
@@ -43,7 +43,8 @@ Write-Host "Checking if patch can be applied..."
 # Check if the patch can be applied
 git apply $PatchFile --ignore-space-change --ignore-whitespace --check
 If ($LASTEXITCODE -eq 0) {
-    Write-Host "Patch needed, trying now"
+    Write-Host "Patch needed, trying to apply now"
+    Write-Host "================================="
     git apply $PatchFile --ignore-space-change --ignore-whitespace
 
     switch ($PipelineVendor) {
@@ -60,9 +61,9 @@ If ($LASTEXITCODE -eq 0) {
             git add --all
             git commit -m "Adding cloud changes since deployment $LatestDeploymentId [skip ci]"
             git push --set-upstream origin $env:BUILD_SOURCEBRANCHNAME
-            $updatedSha = git rev-parse HEAD
-
+            
             # Record the new sha for the deploy
+            $updatedSha = git rev-parse HEAD
             Write-Host "##vso[task.setvariable variable=updatedSha;isOutput=true]$($updatedSha)"
         }
         "TESTRUN" {
@@ -74,12 +75,16 @@ If ($LASTEXITCODE -eq 0) {
             Exit 1
         }
     }
+
+    Write-Host "Changes are applied successfully"
+    Write-Host ""
     Write-Host "Updated SHA: $updatedSha"
     Exit 0
 } Else {
     Write-Host ""
     Write-Host "Patch cannot be applied - please check the output below for the problematic parts"
     Write-Host "================================================================================="
-    git apply --reject $PatchFile --ignore-space-change --ignore-whitespace --check
+    Write-Host ""
+    git apply -v --reject $PatchFile --ignore-space-change --ignore-whitespace --check
     Exit 1
 }

@@ -2,15 +2,15 @@ name: Deploy To Cloud
 
 on:
   workflow_call:
+    inputs:
+      newSha:
+        required: false
+        type: string
     secrets:
-      projectId: 
+      PROJECT_ID:
         required: true
-      umbracoCloudApiKey:
+      UMBRACO_CLOUD_API_KEY:
         required: true
-
-env:
-  projectId: ${{ secrets.projectId }}
-  umbracoCloudApiKey: ${{ secrets.umbracoCloudApiKey }}
 
 jobs:
   prepareDeployment:
@@ -18,6 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.newSha }}
 
       # switch the gitignore files so cloud does not ignore the build frontend assets
       - name: Prepare Cloud Git Ignore
