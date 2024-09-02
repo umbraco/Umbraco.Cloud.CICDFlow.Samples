@@ -33,7 +33,7 @@ jobs:
           -ApiKey ${{ env.umbracoCloudApiKey }} 
           -PipelineVendor GITHUB
     outputs: 
-      latestDeployemntId: ${{ steps.latest-deployment.outputs.latestDeploymentId }}
+      latestDeploymentId: ${{ steps.latest-deployment.outputs.latestDeploymentId }}
 
   checkForChanges:
     name: Check if there are changes since latest deployment
@@ -46,7 +46,7 @@ jobs:
       # When "remoteChanges" is yes, there will also be downloaded a patch-file to the path you specified in -DownloadFolder parameter
       - name: Fetch Changes From Cloud
         env:
-          latestDeploymentId: ${{ needs.preflight.outputs.latestDeployemntId }}
+          latestDeploymentId: ${{ needs.preflight.outputs.latestDeploymentId }}
         if: ${{ env.latestDeploymentId != '' }}
         id: latest-changes
         shell: pwsh
