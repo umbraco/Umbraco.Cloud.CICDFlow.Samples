@@ -48,12 +48,20 @@ function call_api {
 
     return
   fi
-  ## Let errors bubble forward 
-  echo "Unexpected API Response Code: $responseCode"
-  echo "---Response Start---"
-  echo $response
-  echo "---Response End---"
 
+  ## Let errors bubble forward 
+  errorResponse=$response
+  echo "Unexpected API Response Code: $responseCode - More details below"
+  # Check if the input is valid JSON
+  echo "$errorResponse" | jq . > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+      echo "--- Response RAW ---\n"
+      echo $errorResponse
+  else 
+      echo "--- Response JSON formatted ---\n"
+      echo $errorResponse | jq .
+  fi
+  echo "\n---Response End---"
   exit 1
 }
 
