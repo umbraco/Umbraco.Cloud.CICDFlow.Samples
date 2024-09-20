@@ -89,6 +89,12 @@ try {
 }
 catch {
   Write-Host "---Error---"
-  Write-Host $_
+  Write-Host $_.Exception.Message
+  if ($_.Exception.Response -ne $null) {
+      $responseStream = $_.Exception.Response.GetResponseStream()
+      $reader = New-Object System.IO.StreamReader($responseStream)
+      $responseBody = $reader.ReadToEnd()
+      Write-Host "Response Body: $responseBody"
+  }
   exit 1
 }
