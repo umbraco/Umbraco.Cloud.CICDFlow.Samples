@@ -50,15 +50,15 @@ function get_changes {
   errorResponse=$filePath
   echo "Unexpected API Response Code: $responseCode - More details below"
   # Check if the input is valid JSON
-  echo "$errorResponse" | jq . > /dev/null 2>&1
+  cat "$errorResponse" | jq . > /dev/null 2>&1
   if [ $? -ne 0 ]; then
-      echo "--- Response RAW ---\n"
-      echo $errorResponse
+      echo "--- Response RAW ---"
+      cat "$errorResponse"
   else 
-      echo "--- Response JSON formatted ---\n"
-      echo $errorResponse | jq .
+      echo "--- Response JSON formatted ---"
+      cat "$errorResponse" | jq .
   fi
-  echo "\n---Response End---"
+  echo "---Response End---"
   exit 1
 }
 
