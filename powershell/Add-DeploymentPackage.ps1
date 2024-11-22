@@ -6,7 +6,7 @@ param(
     [Parameter(Position=1)]
     [string] 
     $DeploymentId,
-    
+   
     [Parameter(Position=2)]
     [string] 
     $ApiKey,
@@ -20,10 +20,23 @@ param(
     $BaseUrl = "https://api.cloud.umbraco.com"
 )
 
+
 ### Endpoint docs
 # https://docs.umbraco.com/umbraco-cloud/set-up/project-settings/umbraco-cicd/umbracocloudapi#upload-zip-source-file
 #
 $url = "$BaseUrl/v1/projects/$ProjectId/deployments/$DeploymentId/package"
+
+# test if file is present
+if (-not $filePath) {
+    Write-Host "filePath is empty"
+    exit 1
+}
+
+if (-not (Test-Path -Path $filePath -PathType Leaf)) {
+    Write-Host "filePath does not contain a file"
+    exit 1
+}
+# end test
 
 $fieldName = 'file'
 $contentType = 'application/zip'
