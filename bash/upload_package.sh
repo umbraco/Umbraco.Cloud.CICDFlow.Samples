@@ -13,6 +13,16 @@ if [[ -z "$baseUrl" ]]; then
     baseUrl="https://api.cloud.umbraco.com"
 fi
 
+if [[ -z "$filePath" ]]; then
+  echo "filePath is empty"
+  exit 1
+fi
+
+if [[ ! -f "$filePath" ]]; then
+  echo "filePath does not contain a file"
+  exit 1
+fi
+
 ### Endpoint docs
 # https://docs.umbraco.com/umbraco-cloud/set-up/project-settings/umbraco-cicd/umbracocloudapi#upload-zip-source-file
 #
