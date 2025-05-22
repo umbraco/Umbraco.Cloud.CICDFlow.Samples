@@ -1,16 +1,22 @@
 name: Deploy To Cloud
 
 on:
-  workflow_call:
-    secrets:
-      projectId: 
-        required: true
-      umbracoCloudApiKey:
-        required: true
+  workflow_dispatch:
+    inputs:
+      newSha:
+        required: false
+        type: string
 
-env:
-  projectId: ${{ secrets.projectId }}
-  umbracoCloudApiKey: ${{ secrets.umbracoCloudApiKey }}
+  workflow_call:
+    inputs:
+      newSha:
+        required: false
+        type: string
+    secrets:
+      PROJECT_ID:
+        required: true
+      UMBRACO_CLOUD_API_KEY:
+        required: true
 
 jobs:
   prepareDeployment:
@@ -18,6 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.newSha }}
 
       # switch the gitignore files so cloud does not ignore the build frontend assets
       - name: Prepare Cloud Git Ignore
@@ -35,12 +43,12 @@ jobs:
           name: source-artifact
           path: ${{GITHUB.WORKSPACE}}/sources.zip
           retention-days: 1
-    
+
   callUmbracoApi:
     name: Upload Source And Start Deployment
     runs-on: ubuntu-latest
     needs: prepareDeployment
-    outputs: 
+    outputs:
       runningDeploymentId: ${{ steps.deployment-meta.outputs.deploymentId }}
     steps:
       - uses: actions/checkout@v4
@@ -48,7 +56,7 @@ jobs:
       - name: Get package for upload
         uses: actions/download-artifact@v4
         with:
-            name: source-artifact
+          name: source-artifact
 
       # Request to prepare a deployment
       # - sets the commit message to be used in cloud 
@@ -58,8 +66,8 @@ jobs:
         shell: bash
         run: >
           bash ${{GITHUB.WORKSPACE}}/.github/scripts/create_deployment.sh
-          ${{ env.projectId }} 
-          ${{ env.umbracoCloudApiKey }} 
+          ${{ secrets.PROJECT_ID }} 
+          ${{ secrets.UMBRACO_CLOUD_API_KEY }} 
           "Run number ${{github.run_number}}" 
           GITHUB
 
@@ -68,20 +76,20 @@ jobs:
         shell: bash
         run: >
           bash ${{GITHUB.WORKSPACE}}/.github/scripts/upload_package.sh 
-          ${{ env.projectId }} 
+          ${{ secrets.PROJECT_ID }} 
           ${{ steps.deployment-meta.outputs.deploymentId }} 
-          ${{ env.umbracoCloudApiKey }} 
+          ${{ secrets.UMBRACO_CLOUD_API_KEY }} 
           ${{ GITHUB.WORKSPACE }}/sources.zip
-         
+
       # Actually request to start the deployment process in cloud
       - name: Request Start Deployment
         shell: bash
         run: >
           bash ${{GITHUB.WORKSPACE}}/.github/scripts/start_deployment.sh 
-          ${{ env.projectId }} 
+          ${{ secrets.PROJECT_ID }} 
           ${{ steps.deployment-meta.outputs.deploymentId }} 
-          ${{ env.umbracoCloudApiKey }}
-         
+          ${{ secrets.UMBRACO_CLOUD_API_KEY }}
+
   awaitDeploymentFinished:
     name: Await deployment to finish
     runs-on: ubuntu-latest
@@ -89,14 +97,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Poll until deployment finishes 
-      - name: Wait for deployment completed 
+      # Poll until deployment finishes
+      - name: Wait for deployment completed
         shell: bash
-        env: 
+        env:
           runningDeploymentId: ${{ needs.callUmbracoApi.outputs.runningDeploymentId }}
         run: >
           bash ${{GITHUB.WORKSPACE}}/.github/scripts/get_deployment_status.sh 
-          ${{ env.projectId }} 
+          ${{ secrets.PROJECT_ID }} 
           ${{ env.runningDeploymentId }} 
-          ${{ env.umbracoCloudApiKey }}
-        
+          ${{ secrets.UMBRACO_CLOUD_API_KEY }}

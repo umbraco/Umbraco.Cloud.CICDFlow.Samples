@@ -86,19 +86,23 @@ jobs:
           artifactName: PatchFile
           targetPath: $(Pipeline.Workspace)/patch
         condition: eq(variables.remoteChangesValue, 'yes')
-      
+    
       # Using plain git to try an push changes back to local repo
       # Depending on your setup you may need to change settings and permissions to better fit your needs
-      #  --ignore-space-change --ignore-whitespace on the git apply allows for minor changes due to OS environment.
-      - pwsh: |
-          Write-Host "hello branch: $($env:BUILD_SOURCEBRANCHNAME)"
-          git checkout $env:BUILD_SOURCEBRANCHNAME
-          git config --global user.name "Azure Pipeline"
-          git config --global user.email "hosted.agent@dev.azure.com"
-          git apply -v $(gitPatchFile) --ignore-space-change --ignore-whitespace
-          git add --all
-          git commit -m "Adding cloud changes since deployment $(latestDeploymentId) [skip ci]"
-          git push --set-upstream origin $env:BUILD_SOURCEBRANCHNAME
+      # This targets the same branch as the pipeline was triggered on.
+
+      ## You can change the "Azure Pipeline" and "hosted.agent@dev.azure.com" to whatever you want, this will show up in you git history on
+      ## changes coming from Umbraco Cloud
+      - task: Bash@3
         displayName: Applying git patch to branch
-        workingDirectory: $(System.DefaultWorkingDirectory)
+        name: cloudGitApplyStep
         condition: eq(variables.remoteChangesValue, 'yes')
+        inputs:
+          targetType: 'filePath'
+          filePath: devops/scripts/apply_patch.sh
+          arguments: > 
+            $(gitPatchFile)
+            $(latestDeploymentId)
+            $(pipelineVendor)
+            "Azure Pipeline"
+            "hosted.agent@dev.azure.com"

@@ -35,9 +35,14 @@ stages:
 # Package and Deploy to Umbraco Cloud
   - stage: CloudDeploymentStage
     displayName: Deploy To Cloud
+    dependsOn: cloudSyncStage
+    condition: in(dependencies.cloudSyncStage.result, 'Succeeded', 'Skipped')
+    variables:
+      newCommitSha: $[ stageDependencies.cloudSyncStage.ApplyRemoteChanges.outputs['cloudGitApplyStep.updatedSha'] ]
     jobs: 
       - template: cloud-deployment.yml
         parameters:
           projectId: $(projectId)
           umbracoCloudApiKey: $(umbracoCloudApiKey)
+          newCommitSha: $(newCommitSha)
           
