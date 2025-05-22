@@ -13,6 +13,16 @@ if [[ -z "$baseUrl" ]]; then
     baseUrl="https://api.cloud.umbraco.com"
 fi
 
+if [[ -z "$filePath" ]]; then
+  echo "filePath is empty"
+  exit 1
+fi
+
+if [[ ! -f "$filePath" ]]; then
+  echo "filePath does not contain a file"
+  exit 1
+fi
+
 ### Endpoint docs
 # https://docs.umbraco.com/umbraco-cloud/set-up/project-settings/umbraco-cicd/umbracocloudapi#upload-zip-source-file
 #
@@ -32,10 +42,18 @@ function call_api {
   fi
 
   ## Let errors bubble forward 
-  echo "Unexpected API Response Code: $responseCode"
-  echo "---Response Start---"
-  echo $content
-  echo "---Response End---"
+  errorResponse=$content
+  echo "Unexpected API Response Code: $responseCode - More details below"
+  # Check if the input is valid JSON
+  echo "$errorResponse" | jq . > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+      echo "--- Response RAW ---\n"
+      echo $errorResponse
+  else 
+      echo "--- Response JSON formatted ---\n"
+      echo $errorResponse | jq .
+  fi
+  echo "\n---Response End---"
   exit 1
 }
 

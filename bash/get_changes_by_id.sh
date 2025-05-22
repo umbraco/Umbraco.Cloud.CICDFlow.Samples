@@ -45,10 +45,20 @@ function get_changes {
     remoteChanges="yes"
     return
   fi
-  echo "---Response Start---"
-  echo $filePath
-  echo -e "\n---Response End---"
-  echo "Unexpected response - see above"
+
+  ## Let errors bubble forward 
+  errorResponse=$filePath
+  echo "Unexpected API Response Code: $responseCode - More details below"
+  # Check if the input is valid JSON
+  cat "$errorResponse" | jq . > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+      echo "--- Response RAW ---"
+      cat "$errorResponse"
+  else 
+      echo "--- Response JSON formatted ---"
+      cat "$errorResponse" | jq .
+  fi
+  echo "---Response End---"
   exit 1
 }
 
