@@ -1,0 +1,55 @@
+name: $(MajorVersion).$(MinorVersion)$(Rev:.r)
+
+pool:
+  vmImage: 'ubuntu-24.04'
+
+variables:
+  - name: MajorVersion
+    value: 0
+  - name: MinorVersion
+    value: 0
+  - name: projectId
+    value: ##Your project Id here##
+  - name: pipelineVendor
+    value: 'AZUREDEVOPS'
+  - name: targetEnvironmentAlias
+    value: ##Your target environment alias here##
+
+# Trigger when committing to main branch
+trigger:
+  batch: true
+  branches:
+    include:
+      - master
+
+# Try to sync the local repository to get up to speed with any changes in Cloud project
+stages:
+  - stage: cloudSyncStage
+    displayName: Umbraco Cloud Sync
+    jobs:
+      - template: cloud-sync.yml  
+
+# Pack and upload the deployment Artifact
+  - stage: cloudPrepareArtifact
+    displayName: Prepare and Upload Artifact
+    dependsOn: cloudSyncStage
+    condition: in(dependencies.cloudSyncStage.result, 'Succeeded', 'Skipped')
+    variables:
+      newCommitSha: $[ stageDependencies.cloudSyncStage.ApplyRemoteChanges.outputs['cloudGitApplyStep.updatedSha'] ]
+    jobs:
+      - template: cloud-artifact.yml
+        parameters:
+          newCommitSha: $(newCommitSha)
+
+# Package and Deploy to Umbraco Cloud
+  - stage: CloudDeploymentStage
+    displayName: Deploy To Cloud
+    dependsOn: cloudPrepareArtifact
+    condition: in(dependencies.cloudPrepareArtifact.result, 'Succeeded', 'Skipped')
+    variables:
+      artifactId: $[ stageDependencies.cloudPrepareArtifact.PrepareAndUploadArtifact.outputs['uploadArtifact.artifactId'] ]
+    jobs: 
+      - template: cloud-deployment.yml
+        parameters:
+          artifactId: $(artifactId)
+          

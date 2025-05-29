@@ -1,0 +1,44 @@
+parameters:
+  - name: artifactId
+    type: string
+
+jobs:
+  - job: StartDeployment
+    displayName: Start Deployment
+    steps:
+      # Actually request to start the deployment process in cloud
+      - task: PowerShell@2
+        displayName: Request Start Deployment
+        name: requestStartDeployment
+        env:
+          artifactId: ${{ parameters.artifactId }}
+        inputs:
+          pwsh: true
+          targetType: 'filePath'
+          filePath: devops/powershell/Start-Deployment.ps1
+          arguments: > 
+            -ProjectId $(projectId)
+            -ApiKey $(umbracoCloudApiKey)
+            -ArtifactId $($env:artifactId)
+            -TargetEnvironmentAlias $(TargetEnvironmentAlias)
+            -CommitMessage "Run for $(Build.BuildNumber)"
+            -NoBuildAndRestore $True
+            -PipelineVendor $(pipelineVendor)
+
+  - job: CheckDeploymentProgress
+    displayName: Check Deployment Progress
+    dependsOn: [ StartDeployment ]
+    variables:
+      deploymentId: $[ dependencies.StartDeployment.outputs['requestStartDeployment.deploymentId'] ]
+    steps:
+      # Poll until deployment finishes 
+      - task: PowerShell@2
+        displayName: Wait for deployment completed
+        inputs:
+          pwsh: true
+          targetType: 'filePath'
+          filePath: devops/powershell/Test-DeploymentStatus.ps1
+          arguments: > 
+            -ProjectId $(projectId)
+            -ApiKey $(umbracoCloudApiKey)
+            -DeploymentId $(deploymentId)
