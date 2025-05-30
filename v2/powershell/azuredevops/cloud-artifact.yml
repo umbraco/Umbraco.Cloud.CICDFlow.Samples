@@ -26,7 +26,9 @@ jobs:
       # switch the gitignore files so cloud does not ignore the build frontend assets
       # zip everything, except what is defined in the 'cloud.zipignore'
       - script: |
+          echo "switching .gitignore with cloud.gitignore"
           cp cloud.gitignore .gitignore
+          echo "Packing artifact for upload"
           zip -r sources.zip . -x@cloud.zipignore
         displayName: Prepare Cloud Git Ignore and Zip Source Code
 

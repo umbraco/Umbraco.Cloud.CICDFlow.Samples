@@ -45,7 +45,7 @@ stages:
   - stage: CloudDeploymentStage
     displayName: Deploy To Cloud
     dependsOn: cloudPrepareArtifact
-    condition: in(dependencies.cloudPrepareArtifact.result, 'Succeeded', 'Skipped')
+    condition: in(dependencies.cloudPrepareArtifact.result, 'Succeeded')
     variables:
       artifactId: $[ stageDependencies.cloudPrepareArtifact.PrepareAndUploadArtifact.outputs['uploadArtifact.artifactId'] ]
     jobs: 
