@@ -10,5 +10,5 @@ Quick setup for Azure Devops using Bash scripts to interact with Umbraco CI/CD F
 3. Bash scripts should be placed in `devops/scripts`.
     - Feel free to place scripts somewhere else, but you need to update the paths in the `cloud-sync.yml`, `cloud.artifact.yml` and `cloud-deployment.yml`
 4. Make a copy of the `.gitignore` from the Cloud Project Repository (not from this sample repository)
-    a. Call the copy `cloud.gitignore`
-    b. place both files in the root of your repository
+    1. Call the copy `cloud.gitignore`
+    2. place both files in the root of your repository
