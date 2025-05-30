@@ -7,14 +7,14 @@ The idea is that they can be integrated into your own pipelines so they will hav
 ## PowerShell scripts
 You can use the same PowerShell scripts for Github and Azure Devops.
 
-- [Github Actions using Powershell Scripts](/v1/powershell/github/readme.md)
-- [Azure DevOps using Powershell Scripts](/v1/powershell/azuredevops/readme.md)
+- [Github Actions using Powershell Scripts](/powershell/github/readme.md)
+- [Azure DevOps using Powershell Scripts](/powershell/azuredevops/readme.md)
 
 ## Bash scripts
 You can use the same Bash scripts for Github and Azure Devops.
 
-- [Github Actions using Bash Scripts](/v1/bash/github/readme.md)
-- [Azure DevOps using Bash Scripts](/v1/bash/azuredevops/readme.md)
+- [Github Actions using Bash Scripts](/bash/github/readme.md)
+- [Azure DevOps using Bash Scripts](/bash/azuredevops/readme.md)
 
 # Further information
 
