@@ -1,0 +1,42 @@
+parameters:
+  - name: artifactId
+    type: string
+
+jobs:
+  - job: StartDeployment
+    displayName: Start Deployment
+    steps:
+      # Actually request to start the deployment process in cloud
+      - task: Bash@3
+        displayName: Request Start Deployment
+        name: requestStartDeployment
+        env:
+          artifactId: ${{ parameters.artifactId }}
+        inputs:
+          targetType: 'filePath'
+          filePath: devops/scripts/start_deployment.sh
+          arguments: > 
+            $(projectId)
+            $(umbracoCloudApiKey)
+            $artifactId
+            $(TargetEnvironmentAlias)
+            "Run for $(Build.BuildNumber)"
+            "true"
+            $(pipelineVendor)
+
+  - job: CheckDeploymentProgress
+    displayName: Check Deployment Progress
+    dependsOn: [ StartDeployment ]
+    variables:
+      deploymentId: $[ dependencies.StartDeployment.outputs['requestStartDeployment.deploymentId'] ]
+    steps:
+      # Poll until deployment finishes 
+      - task: Bash@3
+        displayName: Wait for deployment completed
+        inputs:
+          targetType: 'filePath'
+          filePath: devops/scripts/get_deployment_status.sh
+          arguments: > 
+            $(projectId)
+            $(umbracoCloudApiKey)
+            $(deploymentId)
