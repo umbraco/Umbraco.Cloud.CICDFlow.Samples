@@ -1,0 +1,38 @@
+name: pipeline
+
+# Trigger when committing to main branch
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  cloud-sync:
+    name: "Synchronize with Cloud"
+    uses: ./.github/workflows/cloud-sync.yml
+    secrets:
+      projectId: ${{ secrets.PROJECT_ID }}
+      umbracoCloudApiKey: ${{ secrets.UMBRACO_CLOUD_API_KEY }}
+    with:
+      targetEnvironmentAlias: '##Your target environment alias here##'
+      
+  cloud-artifact:
+    name: "Synchronize with Cloud"
+    uses: ./.github/workflows/cloud-artifact.yml
+    needs: cloud-sync
+    secrets:
+      projectId: ${{ secrets.PROJECT_ID }}
+      umbracoCloudApiKey: ${{ secrets.UMBRACO_CLOUD_API_KEY }}
+
+  # Package and Deploy to Umbraco Cloud
+  cloud-deployment:
+    name: "Deploy to Cloud"
+    needs: cloud-artifact
+    uses: ./.github/workflows/cloud-deployment.yml
+    with:
+      artifactId: ${{ needs.cloud-artifact.outputs.artifactId }}
+      targetEnvironmentAlias: '##Your target environment alias here##'
+    secrets:
+      PROJECT_ID: ${{ secrets.PROJECT_ID }}
+      UMBRACO_CLOUD_API_KEY: ${{ secrets.UMBRACO_CLOUD_API_KEY }}
