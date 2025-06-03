@@ -14,7 +14,7 @@ on:
         description: 'Skip build and restore steps'
         required: false
         type: string
-        default: "true"
+        default: "false"
       skipVersionCheck:
         description: 'Skip version check'
         required: false
