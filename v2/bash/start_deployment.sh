@@ -6,15 +6,13 @@ apiKey="$2"
 artifactId="$3"
 targetEnvironmentAlias="$4"
 commitMessage="$5"
-noBuildAndRestore="$6"
-pipelineVendor="$7"
+noBuildAndRestore="${6:-false}"
+skipVersionCheck="${7:-false}"
+pipelineVendor="$8"
 
 # Not required, defaults to https://api.cloud.umbraco.com
-baseUrl="$8" 
+baseUrl="${9:-https://api.cloud.umbraco.com}" 
 
-if [[ -z "$baseUrl" ]]; then
-    baseUrl="https://api.cloud.umbraco.com"
-fi
 
 ### Endpoint docs
 # https://docs.umbraco.com/umbraco-cloud/set-up/project-settings/umbraco-cicd/umbracocloudapi/todo-v2
@@ -28,11 +26,12 @@ function call_api {
   echo " - artifactId: $artifactId"
   echo " - commitMessage: $commitMessage"
   echo " - noBuildAndRestore: $noBuildAndRestore"
+  echo " - skipVersionCheck: $skipVersionCheck"
 
   response=$(curl -s -w "%{http_code}" -X POST $url \
     -H "Umbraco-Cloud-Api-Key: $apiKey" \
     -H "Content-Type: application/json" \
-    -d "{\"targetEnvironmentAlias\": \"$targetEnvironmentAlias\",\"artifactId\": \"$artifactId\",\"commitMessage\": \"$commitMessage\",\"noBuildAndRestore\": $noBuildAndRestore}")
+    -d "{\"targetEnvironmentAlias\": \"$targetEnvironmentAlias\",\"artifactId\": \"$artifactId\",\"commitMessage\": \"$commitMessage\",\"noBuildAndRestore\": $noBuildAndRestore,\"skipVersionCheck\": $skipVersionCheck}")
 
   responseCode=${response: -3}  
   content=${response%???}

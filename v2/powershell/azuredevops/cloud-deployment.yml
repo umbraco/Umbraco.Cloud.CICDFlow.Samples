@@ -23,6 +23,7 @@ jobs:
             -TargetEnvironmentAlias $(TargetEnvironmentAlias)
             -CommitMessage "Run for $(Build.BuildNumber)"
             -NoBuildAndRestore $True
+            -SkipVersionCheck $False
             -PipelineVendor $(pipelineVendor)
 
   - job: CheckDeploymentProgress

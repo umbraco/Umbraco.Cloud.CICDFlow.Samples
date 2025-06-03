@@ -24,10 +24,14 @@ param(
     $NoBuildAndRestore = $false,
 
     [Parameter(Position=6)]
+    [bool] 
+    $SkipVersionCheck = $false,
+
+    [Parameter(Position=7)]
     [string] 
     $PipelineVendor, ## GITHUB or AZUREDEVOPS
 
-    [Parameter(Position=7)]    
+    [Parameter(Position=8)]    
     [string] 
     $BaseUrl = "https://api.cloud.umbraco.com"
 )
@@ -47,6 +51,7 @@ $requestBody = @{
     'artifactId' = $ArtifactId
     'commitMessage' = $CommitMessage
     'noBuildAndRestore' = $NoBuildAndRestore
+    'skipVersionCheck' = $SkipVersionCheck
 } | ConvertTo-Json
 
 try {

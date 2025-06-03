@@ -42,7 +42,7 @@ jobs:
 
       # Request to prepare a deployment
       # - sets the commit message to be used in cloud 
-      # - supplies you with a deploymentId to be used in the rest of the process
+      # - supplies you with a deploymentId to be used to query the deployment process
       - name: Create Deployment Meta
         id: deployment-meta
         shell: pwsh
@@ -54,6 +54,7 @@ jobs:
           -TargetEnvironmentAlias ${{ inputs.targetEnvironmentAlias }}
           -CommitMessage "Run number ${{github.run_number}}" 
           -NoBuildAndRestore $True
+          -SkipVersionCheck $False
           -PipelineVendor GITHUB
 
 

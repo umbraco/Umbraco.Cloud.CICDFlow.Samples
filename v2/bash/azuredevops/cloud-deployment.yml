@@ -22,6 +22,7 @@ jobs:
             $(TargetEnvironmentAlias)
             "Run for $(Build.BuildNumber)"
             "true"
+            "false"
             $(pipelineVendor)
 
   - job: CheckDeploymentProgress
