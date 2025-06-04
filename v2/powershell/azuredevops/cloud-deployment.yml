@@ -2,11 +2,11 @@ parameters:
   - name: artifactId
     type: string
   - name: noBuildAndRestore
-    type: number
-    default: 0
+    type: boolean
+    default: false
   - name: skipVersionCheck
-    type: number
-    default: 0
+    type: boolean
+    default: false
 
 jobs:
   - job: StartDeployment
@@ -16,10 +16,6 @@ jobs:
       - task: PowerShell@2
         displayName: Request Start Deployment
         name: requestStartDeployment
-        env:
-          artifactId: ${{ parameters.artifactId }}
-          noBuildAndRestore: ${{ parameters.noBuildAndRestore }}
-          skipVersionCheck: ${{ parameters.skipVersionCheck }}
         inputs:
           pwsh: true
           targetType: 'filePath'
@@ -27,11 +23,11 @@ jobs:
           arguments: > 
             -ProjectId $(projectId)
             -ApiKey $(umbracoCloudApiKey)
-            -ArtifactId $($env:artifactId)
+            -ArtifactId ${{ parameters.artifactId }}
             -TargetEnvironmentAlias $(TargetEnvironmentAlias)
             -CommitMessage "Run for $(Build.BuildNumber)"
-            -NoBuildAndRestore $($env:skipVersionCheck)
-            -SkipVersionCheck $($env:artifactId)
+            -NoBuildAndRestore $${{ parameters.noBuildAndRestore }}
+            -SkipVersionCheck $${{ parameters.skipVersionCheck }}
             -PipelineVendor $(pipelineVendor)
 
   - job: CheckDeploymentProgress

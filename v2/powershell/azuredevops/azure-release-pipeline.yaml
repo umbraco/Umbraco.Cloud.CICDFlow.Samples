@@ -53,5 +53,5 @@ stages:
       - template: cloud-deployment.yml
         parameters:
           artifactId: $(artifactId)
-          noBuildAndRestore: 0
-          skipVersionCheck: 0
+          noBuildAndRestore: false
+          skipVersionCheck: false
