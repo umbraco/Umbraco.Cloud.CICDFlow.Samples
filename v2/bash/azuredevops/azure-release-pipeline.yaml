@@ -22,14 +22,15 @@ trigger:
     include:
       - master
 
-# Try to sync the local repository to get up to speed with any changes in Cloud project
 stages:
+  # Get changes from cloud
+
   - stage: cloudSyncStage
     displayName: Umbraco Cloud Sync
     jobs:
       - template: cloud-sync.yml  
 
-# Pack and upload the deployment Artifact
+  # Pack and upload the deployment Artifact
   - stage: cloudPrepareArtifact
     displayName: Prepare and Upload Artifact
     dependsOn: cloudSyncStage
@@ -41,7 +42,7 @@ stages:
         parameters:
           newCommitSha: $(newCommitSha)
 
-# Package and Deploy to Umbraco Cloud
+  # Deploy to Umbraco Cloud
   - stage: CloudDeploymentStage
     displayName: Deploy To Cloud
     dependsOn: cloudPrepareArtifact
@@ -52,4 +53,5 @@ stages:
       - template: cloud-deployment.yml
         parameters:
           artifactId: $(artifactId)
-          
+          noBuildAndRestore: $False
+          skipVersionCheck: $False
