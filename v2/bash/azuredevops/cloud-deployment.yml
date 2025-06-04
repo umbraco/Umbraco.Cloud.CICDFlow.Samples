@@ -1,13 +1,12 @@
 parameters:
   - name: artifactId
     type: string
-    required: true
   - name: noBuildAndRestore
-    type: boolean
-    default: $False
+    type: string
+    default: 'false'
   - name: skipVersionCheck
-    type: boolean
-    default: $False
+    type: string
+    default: 'false'
 
 jobs:
   - job: StartDeployment
@@ -30,8 +29,8 @@ jobs:
             $artifactId
             $(TargetEnvironmentAlias)
             "Run for $(Build.BuildNumber)"
-            $(noBuildAndRestore)
-            $(skipVersionCheck)
+            $noBuildAndRestore
+            $skipVersionCheck
             $(pipelineVendor)
 
   - job: CheckDeploymentProgress
