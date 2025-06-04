@@ -1,6 +1,13 @@
 parameters:
   - name: artifactId
     type: string
+    required: true
+  - name: noBuildAndRestore
+    type: boolean
+    default: $False
+  - name: skipVersionCheck
+    type: boolean
+    default: $False
 
 jobs:
   - job: StartDeployment
@@ -12,6 +19,8 @@ jobs:
         name: requestStartDeployment
         env:
           artifactId: ${{ parameters.artifactId }}
+          noBuildAndRestore: ${{ parameters.noBuildAndRestore }}
+          skipVersionCheck: ${{ parameters.skipVersionCheck }}
         inputs:
           pwsh: true
           targetType: 'filePath'
@@ -22,8 +31,8 @@ jobs:
             -ArtifactId $($env:artifactId)
             -TargetEnvironmentAlias $(TargetEnvironmentAlias)
             -CommitMessage "Run for $(Build.BuildNumber)"
-            -NoBuildAndRestore $True
-            -SkipVersionCheck $False
+            -NoBuildAndRestore $($env:skipVersionCheck)
+            -SkipVersionCheck $($env:artifactId)
             -PipelineVendor $(pipelineVendor)
 
   - job: CheckDeploymentProgress
