@@ -38,5 +38,5 @@ jobs:
       noBuildAndRestore: "false"
       skipVersionCheck: "false"
     secrets:
-      PROJECT_ID: ${{ secrets.PROJECT_ID }}
-      UMBRACO_CLOUD_API_KEY: ${{ secrets.UMBRACO_CLOUD_API_KEY }}
+      projectId: ${{ secrets.PROJECT_ID }}
+      umbracoCloudApiKey: ${{ secrets.UMBRACO_CLOUD_API_KEY }}
