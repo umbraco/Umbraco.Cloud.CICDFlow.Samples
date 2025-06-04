@@ -1,7 +1,6 @@
 parameters:
   - name: artifactId
     type: string
-    required: true
   - name: noBuildAndRestore
     type: number
     default: 0
