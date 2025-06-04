@@ -28,6 +28,9 @@ jobs:
       umbracoCloudApiKey: ${{ secrets.UMBRACO_CLOUD_API_KEY }}
 
   # Deploy to Umbraco Cloud
+  # ####
+  # you can edit the variables noBuildAndRestore and skipVersionCheck    
+  # use 0 for false and 1 for true
   cloud-deployment:
     name: "Deploy to Cloud"
     needs: cloud-artifact
@@ -35,8 +38,8 @@ jobs:
     with:
       artifactId: ${{ needs.cloud-artifact.outputs.artifactId }}
       targetEnvironmentAlias: ${{ vars.TARGET_ENVIRONMENT_ALIAS }}
-      noBuildAndRestore: "false"
-      skipVersionCheck: "false"
+      noBuildAndRestore: 0
+      skipVersionCheck: 0
     secrets:
       projectId: ${{ secrets.PROJECT_ID }}
       umbracoCloudApiKey: ${{ secrets.UMBRACO_CLOUD_API_KEY }}

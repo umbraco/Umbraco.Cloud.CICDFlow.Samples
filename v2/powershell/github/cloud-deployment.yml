@@ -23,13 +23,13 @@ on:
       noBuildAndRestore:
         description: 'Skip build and restore steps'
         required: false
-        type: string
-        default: "false"
+        type: number
+        default: 0
       skipVersionCheck:
         description: 'Skip version check'
         required: false
-        type: string
-        default: "false"
+        type: number
+        default: 0
 
     secrets:
       projectId:
