@@ -6,13 +6,11 @@ on:
       newSha:
         description: 'The new SHA hash if there was a patch'
         value: ${{ jobs.applyRemoteChanges.outputs.newSha }}
-
     inputs:
       targetEnvironmentAlias:
         description: 'The target environment alias to sync with'
         required: true
         type: string
-
     secrets:
       projectId:
         required: true
@@ -24,7 +22,7 @@ jobs:
     name: Check Cloud for changes
     runs-on: ubuntu-latest
     steps:
-      # Gets the latest CICD Flow deployment if there is any
+      # Gets the latest CICD Flow deployment to target Environment if there are any
       # Will write "latestDeploymentId" to pipeline variables, value can be an uuid or empty string 
       - uses: actions/checkout@v4
       - name: Get Latest Deployment
@@ -45,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # Download git-patch file based on latest deployment
+      # Download git-patch file based on changes since latest deployment to target Environment
       # Will write "remoteChanges" to pipeline variables, value can be "yes" or "no"
       # When "remoteChanges" is yes, there will also be downloaded a patch-file to the path you specified in -DownloadFolder parameter
       - name: Fetch Changes From Cloud

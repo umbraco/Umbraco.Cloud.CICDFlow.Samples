@@ -16,19 +16,13 @@ on:
         required: true
       umbracoCloudApiKey:
         required: true
-    
-
-env:
-  projectId: ${{ secrets.projectId }}
-  umbracoCloudApiKey: ${{ secrets.umbracoCloudApiKey }}
-  targetEnvironmentAlias: ${{ inputs.targetEnvironmentAlias }}
 
 jobs:
   preflight:
     name: Check Cloud for changes
     runs-on: ubuntu-latest
     steps:
-      # Gets the latest CICD Flow deployment if there is any
+      # Gets the latest CICD Flow deployment to target Environment if there are any
       # Will write "latestDeploymentId" to pipeline variables, value can be an uuid or empty string 
       - uses: actions/checkout@v4
       - name: Get Latest Deployment
@@ -36,9 +30,9 @@ jobs:
         shell: pwsh
         run: >
           ${{GITHUB.WORKSPACE}}/.github/powershell/Get-LatestDeployment.ps1 
-          -ProjectId ${{ env.projectId }} 
-          -ApiKey ${{ env.umbracoCloudApiKey }} 
-          -TargetEnvironmentAlias ${{ env.targetEnvironmentAlias }}
+          -ProjectId ${{ secrets.projectId }} 
+          -ApiKey ${{ secrets.umbracoCloudApiKey }} 
+          -TargetEnvironmentAlias ${{ inputs.targetEnvironmentAlias }}
           -PipelineVendor GITHUB
     outputs: 
       latestDeploymentId: ${{ steps.latest-deployment.outputs.latestDeploymentId }}
@@ -49,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # Download git-patch file based on latest deployment
+      # Download git-patch file based on changes since latest deployment to target Environment
       # Will write "remoteChanges" to pipeline variables, value can be "yes" or "no"
       # When "remoteChanges" is yes, there will also be downloaded a patch-file to the path you specified in -DownloadFolder parameter
       - name: Fetch Changes From Cloud
@@ -60,24 +54,24 @@ jobs:
         shell: pwsh
         run: >
           ${{GITHUB.WORKSPACE}}/.github/powershell/Get-ChangesById.ps1 
-          -ProjectId ${{ env.projectId }} 
-          -ApiKey ${{ env.umbracoCloudApiKey }} 
+          -ProjectId ${{ secrets.projectId }} 
+          -ApiKey ${{ secrets.umbracoCloudApiKey }} 
           -DeploymentId ${{ env.latestDeploymentId }}
-          -TargetEnvironmentAlias ${{ env.targetEnvironmentAlias }}
+          -TargetEnvironmentAlias ${{ inputs.targetEnvironmentAlias }}
           -DownloadFolder ${{GITHUB.WORKSPACE}}/patch
           -PipelineVendor GITHUB
 
       - name: See diff content if any
         if: ${{ steps.latest-changes.outputs.remoteChanges == 'yes' }}
         shell: pwsh
-        run: get-content ${{GITHUB.WORKSPACE}}/patch/git-patch.diff
+        run: get-content ${{ GITHUB.WORKSPACE }}/patch/git-patch.diff
 
       - name: Store diff before applying
         if: ${{ steps.latest-changes.outputs.remoteChanges == 'yes' }}
         uses: actions/upload-artifact@v4
         with:
           name: git-patch
-          path: ${{GITHUB.WORKSPACE}}/patch/git-patch.diff
+          path: ${{ GITHUB.WORKSPACE }}/patch/git-patch.diff
           retention-days: 1
     outputs:
       remoteChanges: ${{ steps.latest-changes.outputs.remoteChanges }}  
@@ -101,7 +95,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: git-patch
-          path: ${{GITHUB.WORKSPACE}}/patch
+          path: ${{ GITHUB.WORKSPACE }}/patch
 
       # Using plain git to try an push changes back to local repo
       # Depending on your setup you may need to change settings and permissions to better fit your needs
