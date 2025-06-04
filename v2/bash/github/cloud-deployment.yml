@@ -1,10 +1,20 @@
 name: Deploy To Cloud
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       artifactId:
         required: false
+        type: string
+      targetEnvironmentAlias:
+        description: 'The target environment alias to deploy to'
+        required: true
+        type: string
+
+  workflow_call:
+    inputs:
+      artifactId:
+        required: true
         type: string
       targetEnvironmentAlias:
         description: 'The target environment alias to deploy to'
@@ -62,10 +72,11 @@ jobs:
 
       # Poll until deployment finishes 
       - name: Wait for deployment completed
-        id: waitForDeployment
         shell: bash
+        env: 
+          runningDeploymentId: ${{ needs.startDeployment.outputs.runningDeploymentId }}
         run: >
           bash ${{ GITHUB.WORKSPACE }}/.github/scripts/get_deployment_status.sh 
           ${{ secrets.projectId }} 
           ${{ secrets.umbracoCloudApiKey }} 
-          ${{ needs.startDeployment.outputs.runningDeploymentId }} 
+          ${{ env.runningDeploymentId }} 

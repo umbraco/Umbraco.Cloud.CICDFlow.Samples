@@ -14,16 +14,27 @@ on:
   workflow_call:
     inputs:
       artifactId:
-        required: false
+        required: true
         type: string
       targetEnvironmentAlias:
         description: 'The target environment alias to deploy to'
         required: true
         type: string
+      noBuildAndRestore:
+        description: 'Skip build and restore steps'
+        required: false
+        type: string
+        default: "false"
+      skipVersionCheck:
+        description: 'Skip version check'
+        required: false
+        type: string
+        default: "false"
+
     secrets:
-      PROJECT_ID:
+      projectId:
         required: true
-      UMBRACO_CLOUD_API_KEY:
+      umbracoCloudApiKey:
         required: true
 
 jobs:
@@ -31,32 +42,26 @@ jobs:
     name: Start Deployment
     runs-on: ubuntu-latest
     outputs:
-      runningDeploymentId: ${{ steps.deployment-meta.outputs.deploymentId }}
+      runningDeploymentId: ${{ steps.requestStartDeployment.outputs.deploymentId }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Get package for upload
-        uses: actions/download-artifact@v4
-        with:
-            name: source-artifact
-
       # Request to prepare a deployment
       # - sets the commit message to be used in cloud 
-      # - supplies you with a deploymentId to be used to query the deployment process
-      - name: Create Deployment Meta
-        id: deployment-meta
+      # - supplies you with a deploymentId to be used in the rest of the process
+      - name: Request Start Deployment
+        id: requestStartDeployment
         shell: pwsh
         run: >
           ${{GITHUB.WORKSPACE}}/.github/powershell/Start-Deployment.ps1 
-          -ProjectId ${{ secrets.PROJECT_ID }} 
-          -ApiKey ${{ secrets.UMBRACO_CLOUD_API_KEY }} 
+          -ProjectId ${{ secrets.projectId }} 
+          -ApiKey ${{ secrets.umbracoCloudApiKey }} 
           -ArtifactId ${{ inputs.artifactId }}
           -TargetEnvironmentAlias ${{ inputs.targetEnvironmentAlias }}
           -CommitMessage "Run number ${{github.run_number}}" 
-          -NoBuildAndRestore $True
-          -SkipVersionCheck $False
+          -NoBuildAndRestore ${{ inputs.noBuildAndRestore }}
+          -SkipVersionCheck ${{ inputs.skipVersionCheck }}
           -PipelineVendor GITHUB
-
 
   awaitDeploymentFinished:
     name: Await deployment to finish
@@ -72,6 +77,6 @@ jobs:
           runningDeploymentId: ${{ needs.startDeployment.outputs.runningDeploymentId }}
         run: >
           ${{GITHUB.WORKSPACE}}/.github/powershell/Test-DeploymentStatus.ps1 
-          -ProjectId ${{ secrets.PROJECT_ID }} 
+          -ProjectId ${{ secrets.projectId }} 
+          -ApiKey ${{ secrets.umbracoCloudApiKey }}
           -DeploymentId ${{ env.runningDeploymentId }} 
-          -ApiKey ${{ secrets.UMBRACO_CLOUD_API_KEY }}
