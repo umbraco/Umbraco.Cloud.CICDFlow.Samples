@@ -3,11 +3,11 @@ parameters:
     type: string
     required: true
   - name: noBuildAndRestore
-    type: boolean
-    default: $False
+    type: number
+    default: 0
   - name: skipVersionCheck
-    type: boolean
-    default: $False
+    type: number
+    default: 0
 
 jobs:
   - job: StartDeployment
