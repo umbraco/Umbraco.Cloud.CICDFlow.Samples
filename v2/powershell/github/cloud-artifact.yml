@@ -37,6 +37,14 @@ jobs:
           zip -r sources.zip . -x@cloud.zipignore
         shell: bash
 
+      # store artifact for easy debug if needed
+      - name: Store artifact in pipeline
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-artifact
+          path: ${{GITHUB.WORKSPACE}}/sources.zip
+          retention-days: 1
+
       # Upload your zipped artifact
       - name: Post Zipped Artifact
         id: upload-artifact

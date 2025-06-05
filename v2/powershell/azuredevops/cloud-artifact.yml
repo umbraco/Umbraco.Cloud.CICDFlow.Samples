@@ -32,6 +32,11 @@ jobs:
           zip -r sources.zip . -x@cloud.zipignore
         displayName: Prepare Cloud Git Ignore and Zip Source Code
 
+      # store artifact for easy debug if needed
+      - publish: $(System.DefaultWorkingDirectory)/sources.zip
+        displayName: Store artifact in pipeline
+        artifact: SourcesZip
+
       # Upload your zipped artifact
       - task: PowerShell@2
         name: uploadArtifact
