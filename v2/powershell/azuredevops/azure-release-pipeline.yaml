@@ -20,11 +20,10 @@ trigger:
   batch: true
   branches:
     include:
-      - master
+      - main
 
 stages:
   # Get changes from cloud
-
   - stage: cloudSyncStage
     displayName: Umbraco Cloud Sync
     jobs:
@@ -43,6 +42,9 @@ stages:
           newCommitSha: $(newCommitSha)
 
   # Deploy to Umbraco Cloud
+  # ####
+  # you can edit the variables noBuildAndRestore and skipVersionCheck    
+  # use booleans
   - stage: CloudDeploymentStage
     displayName: Deploy To Cloud
     dependsOn: cloudPrepareArtifact

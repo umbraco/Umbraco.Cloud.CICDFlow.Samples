@@ -1,4 +1,4 @@
-name: pipeline
+name: pipeline # You can add your own name for the pipeline here
 
 # Trigger when committing to main branch
 on:
@@ -28,6 +28,9 @@ jobs:
       umbracoCloudApiKey: ${{ secrets.UMBRACO_CLOUD_API_KEY }}
 
   # Deploy to Umbraco Cloud
+  # ####
+  # you can edit the variables noBuildAndRestore and skipVersionCheck    
+  # use booleans but as strings
   cloud-deployment:
     name: "Deploy to Cloud"
     needs: cloud-artifact
