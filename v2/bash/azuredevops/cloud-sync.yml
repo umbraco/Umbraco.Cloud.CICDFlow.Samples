@@ -1,3 +1,8 @@
+parameters:
+  - name: targetEnvironmentAlias
+    type: string
+    default: $(targetEnvironmentAlias)
+
 jobs:
   - job: cloudSync
     displayName: Check Cloud for changes
@@ -13,7 +18,7 @@ jobs:
           arguments: > 
             $(projectId)
             $(umbracoCloudApiKey)
-            $(TargetEnvironmentAlias)
+            ${{ parameters.targetEnvironmentAlias }}
             $(pipelineVendor)
 
     # Download git-patch file based on latest deployment
@@ -29,7 +34,7 @@ jobs:
             $(projectId)
             $(umbracoCloudApiKey)
             $(latestDeploymentId)
-            $(TargetEnvironmentAlias)
+            ${{ parameters.targetEnvironmentAlias }}
             $(Pipeline.Workspace)/patch
             $(pipelineVendor)
 

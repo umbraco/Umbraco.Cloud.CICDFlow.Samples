@@ -7,6 +7,9 @@ parameters:
   - name: skipVersionCheck
     type: boolean
     default: false
+  - name: targetEnvironmentAlias
+    type: string
+    default: $(targetEnvironmentAlias)
 
 jobs:
   - job: StartDeployment
@@ -24,7 +27,7 @@ jobs:
             -ProjectId $(projectId)
             -ApiKey $(umbracoCloudApiKey)
             -ArtifactId ${{ parameters.artifactId }}
-            -TargetEnvironmentAlias $(TargetEnvironmentAlias)
+            -TargetEnvironmentAlias ${{ parameters.targetEnvironmentAlias }}
             -CommitMessage "Run for $(Build.BuildNumber)"
             -NoBuildAndRestore $${{ parameters.noBuildAndRestore }}
             -SkipVersionCheck $${{ parameters.skipVersionCheck }}
