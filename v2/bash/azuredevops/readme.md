@@ -12,3 +12,7 @@ Quick setup for Azure Devops using Bash scripts to interact with Umbraco CI/CD F
 4. Make a copy of the `.gitignore` from the Cloud Project Repository (not from this sample repository)
     1. Call the copy `cloud.gitignore`
     2. place both files in the root of your repository
+
+## Want to be able to target more environments?
+The `advanced`-folder contains a modified version of `azure-release-pipeline.yaml`. 
+This one, called `azure-release-pipeline-more-targets.yaml`, is able to target different environments based on the branch that triggered the pipeline.
