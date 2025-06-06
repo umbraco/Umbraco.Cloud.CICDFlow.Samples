@@ -5,18 +5,44 @@ on:
   push:
     branches:
       - main
+      - flexible
   workflow_dispatch: # Allow manual triggering of the workflow
 
 jobs:
+  # resolve which environment to deploy to based on triggering branch
+  set-env:
+    runs-on: ubuntu-latest
+    outputs:
+      targetEnvironmentAlias: ${{ steps.set.outputs.targetEnvironmentAlias }}
+    steps:
+      - name: Resolve Target Environment
+        id: set
+        run: |
+          echo "Triggering branch: ${{ github.ref_name }}"
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "Target is: $leftmostMainline"
+            echo "targetEnvironmentAlias=$leftmostMainline" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref_name }}" = "flexible" ]; then
+            echo "Target is: $flexible"
+            echo "targetEnvironmentAlias=$flexible" >> $GITHUB_OUTPUT
+          else
+            echo "no target environment defined for branch: $(Build.SourceBranchName)"
+            exit 1
+          fi
+        env:
+          leftmostMainline: ${{ vars.TARGET_ENVIRONMENT_ALIAS}}
+          flexible: ${{ vars.FLEXIBLE_ENVIRONMENT_ALIAS }}
+
   # Get changes from cloud
   cloud-sync:
+    needs: set-env
     name: "Umbraco Cloud Sync"
     uses: ./.github/workflows/cloud-sync.yml
     secrets:
       projectId: ${{ secrets.PROJECT_ID }}
       umbracoCloudApiKey: ${{ secrets.UMBRACO_CLOUD_API_KEY }}
     with:
-      targetEnvironmentAlias: ${{ vars.TARGET_ENVIRONMENT_ALIAS }}
+      targetEnvironmentAlias: ${{ needs.set-env.outputs.targetEnvironmentAlias }}
 
   # Pack and upload the deployment Artifact
   cloud-artifact:
@@ -33,11 +59,11 @@ jobs:
   # use booleans but as strings
   cloud-deployment:
     name: "Deploy to Cloud"
-    needs: cloud-artifact
+    needs: [set-env, cloud-artifact]
     uses: ./.github/workflows/cloud-deployment.yml
     with:
       artifactId: ${{ needs.cloud-artifact.outputs.artifactId }}
-      targetEnvironmentAlias: ${{ vars.TARGET_ENVIRONMENT_ALIAS }}
+      targetEnvironmentAlias: ${{ needs.set-env.outputs.targetEnvironmentAlias }}
       noBuildAndRestore: "false"
       skipVersionCheck: "false"
     secrets:

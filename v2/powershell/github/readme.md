@@ -12,3 +12,7 @@ Quick setup for GitHub Actions using PowerShell scripts to interact with the Umb
 4. Make a copy of the `.gitignore` from the Cloud Project Repository (not from this sample repository)
     1. Call the copy `cloud.gitignore`
     2. place both files in the root of your repository
+
+## Want to be able to target more environments?
+The `advanced`-folder contains a modified version of `main.yml`. 
+This one, called `main-more-targets.yml`, is able to target different environments based on the branch that triggered the pipeline.
