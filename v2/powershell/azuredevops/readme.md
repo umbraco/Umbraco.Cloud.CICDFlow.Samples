@@ -5,7 +5,7 @@ Quick setup for Azure Devops using PowerShell scripts to interact with the Umbra
 > We are still tweaking and building. Endpoints are prone to change or might even not be available.
 > Please use the V1 scripts and endpoints.
 
-1. Place the [`cloud.zipignore`](../../cloud.zipignore) from the root of this repository, in the root of your repository.
+1. Place the [`cloud.zipignore`](../../../cloud.zipignore) from the root of this repository, in the root of your repository.
 2. Copy the yaml-scripts from this folder into your `devops` folder.
 3. Powershell scripts should be placed in `devops/powershell`.
     - Feel free to place scripts somewhere else, but you need to update the paths in the `cloud-sync.yml`, `cloud.artifact.yml` and `cloud-deployment.yml`
