@@ -1,0 +1,82 @@
+name: Deploy To Cloud
+
+on:
+  workflow_dispatch:
+    inputs:
+      artifactId:
+        required: false
+        type: string
+      targetEnvironmentAlias:
+        description: 'The target environment alias to deploy to'
+        required: true
+        type: string
+
+  workflow_call:
+    inputs:
+      artifactId:
+        required: true
+        type: string
+      targetEnvironmentAlias:
+        description: 'The target environment alias to deploy to'
+        required: true
+        type: string
+      noBuildAndRestore:
+        description: 'Skip build and restore steps'
+        required: false
+        type: number
+        default: 0
+      skipVersionCheck:
+        description: 'Skip version check'
+        required: false
+        type: number
+        default: 0
+
+    secrets:
+      projectId:
+        required: true
+      umbracoCloudApiKey:
+        required: true
+
+jobs:
+  startDeployment:
+    name: Start Deployment
+    runs-on: ubuntu-latest
+    outputs:
+      runningDeploymentId: ${{ steps.requestStartDeployment.outputs.deploymentId }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Request to prepare a deployment
+      # - sets the commit message to be used in cloud 
+      # - supplies you with a deploymentId to be used in the rest of the process
+      - name: Request Start Deployment
+        id: requestStartDeployment
+        shell: pwsh
+        run: >
+          ${{GITHUB.WORKSPACE}}/.github/powershell/Start-Deployment.ps1 
+          -ProjectId ${{ secrets.projectId }} 
+          -ApiKey ${{ secrets.umbracoCloudApiKey }} 
+          -ArtifactId ${{ inputs.artifactId }}
+          -TargetEnvironmentAlias ${{ inputs.targetEnvironmentAlias }}
+          -CommitMessage "Run number ${{github.run_number}}" 
+          -NoBuildAndRestore ${{ inputs.noBuildAndRestore }}
+          -SkipVersionCheck ${{ inputs.skipVersionCheck }}
+          -PipelineVendor GITHUB
+
+  awaitDeploymentFinished:
+    name: Await deployment to finish
+    runs-on: ubuntu-latest
+    needs: startDeployment
+    steps:
+      - uses: actions/checkout@v4
+
+      # Poll until deployment finishes 
+      - name: Wait for deployment completed 
+        shell: pwsh
+        env: 
+          runningDeploymentId: ${{ needs.startDeployment.outputs.runningDeploymentId }}
+        run: >
+          ${{GITHUB.WORKSPACE}}/.github/powershell/Test-DeploymentStatus.ps1 
+          -ProjectId ${{ secrets.projectId }} 
+          -ApiKey ${{ secrets.umbracoCloudApiKey }}
+          -DeploymentId ${{ env.runningDeploymentId }} 

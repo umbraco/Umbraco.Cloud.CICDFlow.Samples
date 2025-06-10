@@ -1,0 +1,59 @@
+name: Prepare and Upload Artifact
+
+on:
+  workflow_call:
+    inputs:
+      newSha:
+        required: false
+        type: string
+    secrets:
+      projectId:
+        required: true
+      umbracoCloudApiKey:
+        required: true
+    outputs:
+      artifactId:
+        description: 'The Id of the uploaded artifact'
+        value: ${{ jobs.prepareDeployment.outputs.artifactId }}
+
+jobs:
+  prepareDeployment:
+    name: Prepare Artifact to cloud
+    runs-on: ubuntu-latest
+    outputs:
+      artifactId: ${{ steps.upload-artifact.outputs.artifactId }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.newSha }}
+
+      # switch the gitignore files so cloud does not ignore the build frontend assets
+      # zip everything, except what is defined in the 'cloud.zipignore'
+      - name: Prepare Cloud Git Ignore and Zip Source Code
+        run: |
+          echo "switching .gitignore with cloud.gitignore"
+          cp cloud.gitignore .gitignore
+          echo "Packing artifact for upload"
+          zip -r sources.zip . -x@cloud.zipignore
+        shell: bash
+
+      # store artifact for easy debug if needed
+      - name: Store artifact in pipeline
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-artifact
+          path: ${{GITHUB.WORKSPACE}}/sources.zip
+          retention-days: 1
+
+      # Upload your zipped artifact
+      - name: Post Zipped Artifact
+        id: upload-artifact
+        shell: pwsh
+        run: >
+          ${{GITHUB.WORKSPACE}}/.github/powershell/Add-DeploymentArtifact.ps1 
+          -ProjectId ${{ secrets.projectId }} 
+          -ApiKey ${{ secrets.umbracoCloudApiKey }} 
+          -FilePath ${{ GITHUB.WORKSPACE }}/sources.zip
+          -Description "Artifact for ${{github.run_number}}"
+          -Version "${{github.run_number}}"
+          -PipelineVendor GITHUB

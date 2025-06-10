@@ -1,0 +1,89 @@
+name: $(MajorVersion).$(MinorVersion)$(Rev:.r)
+
+pool:
+  vmImage: 'ubuntu-24.04'
+
+variables:
+  - name: MajorVersion
+    value: 0
+  - name: MinorVersion
+    value: 0
+  - name: projectId
+    value: ##Your project Id here##
+  - name: pipelineVendor
+    value: 'AZUREDEVOPS'
+  - name: targetEnvironmentAlias
+    value: ##Your target environment alias here##
+  - name: flexibleTargetEnvironmentAlias
+    value: ##Your other target environment alias here##
+
+# Trigger when committing to main or flexible branch 
+trigger:
+  batch: true
+  branches:
+    include:
+      - main
+      - flexible
+
+stages:
+  # resolve which environment to deploy to based on triggering branch
+  - stage: resolveTarget
+    displayName: Resolve Target Environment
+    jobs:
+      - job: setTargetEnvironment
+        steps:
+          - script: |
+              echo "Triggering branch: $(Build.SourceBranchName)"
+              if [ "$(Build.SourceBranchName)" = "main" ]; then
+                echo "Target is: $(targetEnvironmentAlias)"
+                echo "##vso[task.setvariable variable=targetEnvironment;isOutput=true]$(targetEnvironmentAlias)"
+              elif [ "$(Build.SourceBranchName)" = "flexible" ]; then
+                echo "Target is: $(flexibleTargetEnvironmentAlias)"
+                echo "##vso[task.setvariable variable=targetEnvironment;isOutput=true]$(flexibleTargetEnvironmentAlias)"
+              else
+                echo "no target environment defined for branch: $(Build.SourceBranchName)"
+                exit 1
+              fi
+            name: setTargetEnvironmentValue
+
+  # Get changes from cloud
+  - stage: cloudSyncStage
+    dependsOn: resolveTarget
+    displayName: Umbraco Cloud Sync
+    variables:
+      targetEnvironment: $[ stageDependencies.resolveTarget.setTargetEnvironment.outputs['setTargetEnvironmentValue.targetEnvironment'] ]
+    jobs:
+      - template: cloud-sync.yml
+        parameters: 
+          targetEnvironmentAlias: $(targetEnvironment)
+
+  # Pack and upload the deployment Artifact
+  - stage: cloudPrepareArtifact
+    displayName: Prepare and Upload Artifact
+    dependsOn: cloudSyncStage
+    condition: in(dependencies.cloudSyncStage.result, 'Succeeded', 'Skipped')
+    variables:
+      newCommitSha: $[ stageDependencies.cloudSyncStage.ApplyRemoteChanges.outputs['cloudGitApplyStep.updatedSha'] ]
+    jobs:
+      - template: cloud-artifact.yml
+        parameters:
+          newCommitSha: $(newCommitSha)
+
+  # Deploy to Umbraco Cloud
+  # ####
+  # you can edit the variables noBuildAndRestore and skipVersionCheck    
+  # use booleans but as strings
+  - stage: CloudDeploymentStage
+    displayName: Deploy To Cloud
+    dependsOn: [cloudPrepareArtifact, resolveTarget]
+    condition: in(dependencies.cloudPrepareArtifact.result, 'Succeeded')
+    variables:
+      artifactId: $[ stageDependencies.cloudPrepareArtifact.PrepareAndUploadArtifact.outputs['uploadArtifact.artifactId'] ]
+      targetEnvironment: $[ stageDependencies.resolveTarget.setTargetEnvironment.outputs['setTargetEnvironmentValue.targetEnvironment'] ]
+    jobs:
+      - template: cloud-deployment.yml
+        parameters:
+          artifactId: $(artifactId)
+          noBuildAndRestore: 'true'
+          skipVersionCheck: 'true'
+          targetEnvironmentAlias: $(targetEnvironment)

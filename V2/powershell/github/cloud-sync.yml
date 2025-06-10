@@ -1,0 +1,124 @@
+name: Umbraco Cloud Sync
+
+on:
+  workflow_call:
+    outputs:
+      newSha:
+        description: 'The new SHA hash if there was a patch'
+        value: ${{ jobs.applyRemoteChanges.outputs.newSha }}
+    inputs:
+      targetEnvironmentAlias:
+        description: 'The target environment alias to sync with'
+        required: true
+        type: string
+    secrets:
+      projectId:
+        required: true
+      umbracoCloudApiKey:
+        required: true
+
+jobs:
+  preflight:
+    name: Check Cloud for changes
+    runs-on: ubuntu-latest
+    steps:
+      # Gets the latest CICD Flow deployment to target Environment if there are any
+      # Will write "latestDeploymentId" to pipeline variables, value can be an uuid or empty string 
+      - uses: actions/checkout@v4
+      - name: Get Latest Deployment
+        id: latest-deployment
+        shell: pwsh
+        run: >
+          ${{GITHUB.WORKSPACE}}/.github/powershell/Get-LatestDeployment.ps1 
+          -ProjectId ${{ secrets.projectId }} 
+          -ApiKey ${{ secrets.umbracoCloudApiKey }} 
+          -TargetEnvironmentAlias ${{ inputs.targetEnvironmentAlias }}
+          -PipelineVendor GITHUB
+    outputs: 
+      latestDeploymentId: ${{ steps.latest-deployment.outputs.latestDeploymentId }}
+
+  checkForChanges:
+    name: Check if there are changes since latest deployment
+    needs: preflight
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Download git-patch file based on changes since latest deployment to target Environment
+      # Will write "remoteChanges" to pipeline variables, value can be "yes" or "no"
+      # When "remoteChanges" is yes, there will also be downloaded a patch-file to the path you specified in -DownloadFolder parameter
+      - name: Fetch Changes From Cloud
+        env:
+          latestDeploymentId: ${{ needs.preflight.outputs.latestDeploymentId }}
+        if: ${{ env.latestDeploymentId != '' }}
+        id: latest-changes
+        shell: pwsh
+        run: >
+          ${{GITHUB.WORKSPACE}}/.github/powershell/Get-ChangesById.ps1 
+          -ProjectId ${{ secrets.projectId }} 
+          -ApiKey ${{ secrets.umbracoCloudApiKey }} 
+          -DeploymentId ${{ env.latestDeploymentId }}
+          -TargetEnvironmentAlias ${{ inputs.targetEnvironmentAlias }}
+          -DownloadFolder ${{GITHUB.WORKSPACE}}/patch
+          -PipelineVendor GITHUB
+
+      - name: See diff content if any
+        if: ${{ steps.latest-changes.outputs.remoteChanges == 'yes' }}
+        shell: pwsh
+        run: get-content ${{ GITHUB.WORKSPACE }}/patch/git-patch.diff
+
+      - name: Store diff before applying
+        if: ${{ steps.latest-changes.outputs.remoteChanges == 'yes' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: git-patch
+          path: ${{ GITHUB.WORKSPACE }}/patch/git-patch.diff
+          retention-days: 1
+    outputs:
+      remoteChanges: ${{ steps.latest-changes.outputs.remoteChanges }}  
+
+  applyRemoteChanges:
+    name: Apply remote changes
+    needs: [preflight, checkForChanges]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        env:
+          remoteChanges: ${{ needs.checkForChanges.outputs.remoteChanges }}
+        if: ${{ env.remoteChanges == 'yes' }}
+        with:
+          fetch-depth: 0
+
+      - name: Get stored diff
+        env:
+          remoteChanges: ${{ needs.checkForChanges.outputs.remoteChanges }}
+        if: ${{ env.remoteChanges == 'yes' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: git-patch
+          path: ${{ GITHUB.WORKSPACE }}/patch
+
+      # Using plain git to try an push changes back to local repo
+      # Depending on your setup you may need to change settings and permissions to better fit your needs
+      # This targets the same branch as the pipeline was triggered on.
+
+      ## You can change the gitName and gitEmail to whatever you want, this will show up in you git history on
+      ## changes coming from Umbraco Cloud
+
+      - name: Applying git patch to branch
+        id: update-bundle
+        env:
+          remoteChanges: ${{ needs.checkForChanges.outputs.remoteChanges }}
+          latestDeploymentId: ${{ needs.preflight.outputs.latestDeploymentId }}
+          gitName: github-actions
+          gitEmail: github-actions@github.com
+        if: ${{ env.remoteChanges == 'yes' }}
+        shell: pwsh
+        run: >
+          ${{GITHUB.WORKSPACE}}/.github/powershell/Apply-Patch.ps1
+          -PatchFile ${{ GITHUB.WORKSPACE }}/patch/git-patch.diff 
+          -LatestDeploymentId ${{ env.latestDeploymentId }} 
+          -PipelineVendor GITHUB
+          -GitUserName ${{ env.gitName }}
+          -GitUserEmail ${{ env.gitEmail }}
+    outputs:
+      newSha: ${{ steps.update-bundle.outputs.updatedSha }}

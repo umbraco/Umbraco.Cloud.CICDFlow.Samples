@@ -1,0 +1,53 @@
+parameters:
+  - name: newCommitSha
+    type: string
+    default: ''
+
+jobs:
+  - job: PrepareAndUploadArtifact
+    displayName: Prepare Deployment Artifact
+    steps:
+      - checkout: 'self'
+        persistCredentials: true
+        fetchDepth: 2
+        displayName: Check out
+
+      # If we have registered that the branch was updated we'll make sure to include the new commit
+      - script: |
+          if [ -n "$(newCommitSha)" ]; then
+            echo "Including the latest incoming changes"
+            git fetch
+            git checkout $(newCommitSha)
+          fi
+        env:
+          newCommitSha: ${{ parameters.newCommitSha }}
+        displayName: 'Checking out updated repository'
+
+      # switch the gitignore files so cloud does not ignore the build frontend assets
+      # zip everything, except what is defined in the 'cloud.zipignore'
+      - script: |
+          echo "switching .gitignore with cloud.gitignore"
+          cp cloud.gitignore .gitignore
+          echo "Packing artifact for upload"
+          zip -r sources.zip . -x@cloud.zipignore
+        displayName: Prepare Cloud Git Ignore and Zip Source Code
+
+      # store artifact for easy debug if needed
+      - publish: $(System.DefaultWorkingDirectory)/sources.zip
+        displayName: Store artifact in pipeline
+        artifact: SourcesZip
+
+      # Upload your zipped artifact
+      - task: Bash@3
+        name: uploadArtifact
+        displayName: Post Zipped Artifact
+        inputs:
+          targetType: 'filePath'
+          filePath: devops/scripts/upload_artifact.sh
+          arguments: > 
+            $(projectId)
+            $(umbracoCloudApiKey)
+            $(System.DefaultWorkingDirectory)/sources.zip
+            "Artifact for $(Build.BuildNumber)"
+            "$(Build.BuildNumber)"
+            $(pipelineVendor)

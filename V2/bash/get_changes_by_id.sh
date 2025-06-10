@@ -1,0 +1,88 @@
+#!/bin/bash
+
+# Set required variables
+projectId="$1"
+apiKey="$2"
+deploymentId="$3"
+targetEnvironmentAlias="$4"
+downloadFolder="$5"
+pipelineVendor="$6"
+
+# Not required, defaults to https://api.cloud.umbraco.com
+baseUrl="$7" 
+
+if [[ -z "$baseUrl" ]]; then
+    baseUrl="https://api.cloud.umbraco.com"
+fi
+
+### Endpoint docs
+# https://docs.umbraco.com/umbraco-cloud/set-up/project-settings/umbraco-cicd/umbracocloudapi/todo-v2
+#
+
+changeUrl="$baseUrl/v2/projects/$projectId/deployments/$deploymentId/diff?targetEnvironmentAlias=$targetEnvironmentAlias"
+filePath="$downloadFolder/git-patch.diff"
+
+# Get diff - stores file as git-patch.diff
+function get_changes {
+  mkdir -p $downloadFolder # ensure folder exists
+  
+  responseCode=$(curl -s -w "%{http_code}" -L -o "$filePath" -X GET $changeUrl \
+    -H "Umbraco-Cloud-Api-Key: $apiKey" \
+    -H "Content-Type: application/json")
+
+  if [[ 10#$responseCode -eq 204 ]]; then
+    echo "No Changes - You can continue"
+    remoteChanges="no"
+    return
+  elif [[ 10#$responseCode -eq 200 ]]; then
+
+    if [ -z "$(cat ${filePath})" ] ## If the patchfile is empty, we treat as no change
+    then
+        echo "No Changes - You can continue"
+        remoteChanges="no"
+        return
+    fi
+
+    echo "Changes detected"
+    remoteChanges="yes"
+    return
+  fi
+
+  ## Let errors bubble forward 
+  errorResponse=$filePath
+  echo "Unexpected API Response Code: $responseCode - More details below"
+  # Check if the input is valid JSON
+  cat "$errorResponse" | jq . > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+      echo "--- Response RAW ---"
+      cat "$errorResponse"
+  else 
+      echo "--- Response JSON formatted ---"
+      cat "$errorResponse" | jq .
+  fi
+  echo "---Response End---"
+  exit 1
+}
+
+if [[ -z "$deploymentId" ]]; then
+  echo "I need a DeploymentId of an older deployment to download a git-patch"
+  exit 1
+fi
+
+get_changes
+
+## Write the latest deployment id to the pipelines variables for use in a later step
+if [[ "$pipelineVendor" == "GITHUB" ]]; then
+  echo "remoteChanges=$remoteChanges" >> "$GITHUB_OUTPUT"
+  exit 0
+elif [[ "$pipelineVendor" == "AZUREDEVOPS" ]]; then
+  echo "##vso[task.setvariable variable=remoteChanges;isOutput=true]$remoteChanges"
+  exit 0
+elif [[ "$pipelineVendor" == "TESTRUN" ]]; then
+  echo $pipelineVendor
+  exit 0
+fi
+
+echo "Please use one of the supported Pipeline Vendors or enhance script to fit your needs"
+echo "Currently supported are: GITHUB and AZUREDEVOPS"
+Exit 1

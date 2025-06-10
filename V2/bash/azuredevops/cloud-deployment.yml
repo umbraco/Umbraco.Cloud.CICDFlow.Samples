@@ -1,0 +1,54 @@
+parameters:
+  - name: artifactId
+    type: string
+  - name: noBuildAndRestore
+    type: string
+    default: 'false'
+  - name: skipVersionCheck
+    type: string
+    default: 'false'
+  - name: targetEnvironmentAlias
+    type: string
+    default: $(targetEnvironmentAlias)
+    
+jobs:
+  - job: StartDeployment
+    displayName: Start Deployment
+    steps:
+      # Actually request to start the deployment process in cloud
+      - task: Bash@3
+        displayName: Request Start Deployment
+        name: requestStartDeployment
+        env:
+          artifactId: ${{ parameters.artifactId }}
+          noBuildAndRestore: ${{ parameters.noBuildAndRestore }}
+          skipVersionCheck: ${{ parameters.skipVersionCheck }}
+        inputs:
+          targetType: 'filePath'
+          filePath: devops/scripts/start_deployment.sh
+          arguments: > 
+            $(projectId)
+            $(umbracoCloudApiKey)
+            $artifactId
+            ${{ parameters.targetEnvironmentAlias }}
+            "Run for $(Build.BuildNumber)"
+            $noBuildAndRestore
+            $skipVersionCheck
+            $(pipelineVendor)
+
+  - job: CheckDeploymentProgress
+    displayName: Check Deployment Progress
+    dependsOn: [ StartDeployment ]
+    variables:
+      deploymentId: $[ dependencies.StartDeployment.outputs['requestStartDeployment.deploymentId'] ]
+    steps:
+      # Poll until deployment finishes 
+      - task: Bash@3
+        displayName: Wait for deployment completed
+        inputs:
+          targetType: 'filePath'
+          filePath: devops/scripts/get_deployment_status.sh
+          arguments: > 
+            $(projectId)
+            $(umbracoCloudApiKey)
+            $(deploymentId)

@@ -1,0 +1,52 @@
+parameters:
+  - name: artifactId
+    type: string
+  - name: noBuildAndRestore
+    type: boolean
+    default: false
+  - name: skipVersionCheck
+    type: boolean
+    default: false
+  - name: targetEnvironmentAlias
+    type: string
+    default: $(targetEnvironmentAlias)
+
+jobs:
+  - job: StartDeployment
+    displayName: Start Deployment
+    steps:
+      # Actually request to start the deployment process in cloud
+      - task: PowerShell@2
+        displayName: Request Start Deployment
+        name: requestStartDeployment
+        inputs:
+          pwsh: true
+          targetType: 'filePath'
+          filePath: devops/powershell/Start-Deployment.ps1
+          arguments: > 
+            -ProjectId $(projectId)
+            -ApiKey $(umbracoCloudApiKey)
+            -ArtifactId ${{ parameters.artifactId }}
+            -TargetEnvironmentAlias ${{ parameters.targetEnvironmentAlias }}
+            -CommitMessage "Run for $(Build.BuildNumber)"
+            -NoBuildAndRestore $${{ parameters.noBuildAndRestore }}
+            -SkipVersionCheck $${{ parameters.skipVersionCheck }}
+            -PipelineVendor $(pipelineVendor)
+
+  - job: CheckDeploymentProgress
+    displayName: Check Deployment Progress
+    dependsOn: [ StartDeployment ]
+    variables:
+      deploymentId: $[ dependencies.StartDeployment.outputs['requestStartDeployment.deploymentId'] ]
+    steps:
+      # Poll until deployment finishes 
+      - task: PowerShell@2
+        displayName: Wait for deployment completed
+        inputs:
+          pwsh: true
+          targetType: 'filePath'
+          filePath: devops/powershell/Test-DeploymentStatus.ps1
+          arguments: > 
+            -ProjectId $(projectId)
+            -ApiKey $(umbracoCloudApiKey)
+            -DeploymentId $(deploymentId)

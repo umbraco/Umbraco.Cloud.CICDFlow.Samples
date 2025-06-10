@@ -1,0 +1,98 @@
+parameters:
+  - name: targetEnvironmentAlias
+    type: string
+    default: $(targetEnvironmentAlias)
+
+jobs:
+  - job: cloudSync
+    displayName: Check Cloud for changes
+    steps:
+      # Gets the latest CICD Flow deployment if there is any
+      # Will write "latestDeploymentId" to pipeline variables, value can be an uuid or empty string 
+      - task: Bash@3
+        displayName: Get Latest Deployment
+        name: getLatestDeploymentId
+        inputs:
+          targetType: 'filePath'
+          filePath: devops/scripts/get_latest_deployment.sh
+          arguments: > 
+            $(projectId)
+            $(umbracoCloudApiKey)
+            ${{ parameters.targetEnvironmentAlias }}
+            $(pipelineVendor)
+
+    # Download git-patch file based on latest deployment
+    # Will write "remoteChanges" to pipeline variables, value can be "yes" or "no"
+    # When "remoteChanges" is yes, there will also be downloaded a patch-file to the path you specified in -DownloadFolder parameter
+      - task: Bash@3
+        displayName: Fetch Changes From Cloud
+        name: latestChanges
+        condition: ne(variables['getLatestDeploymentId.latestDeploymentId'], '')
+        inputs:
+          targetType: 'filePath'
+          filePath: devops/scripts/get_changes_by_id.sh
+          arguments: > 
+            $(projectId)
+            $(umbracoCloudApiKey)
+            $(latestDeploymentId)
+            ${{ parameters.targetEnvironmentAlias }}
+            $(Pipeline.Workspace)/patch
+            $(pipelineVendor)
+
+      - task: Powershell@2
+        displayName: See diff content if any
+        condition: and(succeeded(), eq(variables['latestChanges.remoteChanges'], 'yes'))
+        inputs:
+          pwsh: true
+          targetType: 'inline'
+          script: Get-Content $(Pipeline.Workspace)/patch/git-patch.diff
+
+      - task: PublishPipelineArtifact@1
+        displayName: Store diff before applying
+        condition: and(succeeded(), eq(variables['latestChanges.remoteChanges'], 'yes'))
+        inputs: 
+          targetPath: $(Pipeline.Workspace)/patch/git-patch.diff
+          artifact: PatchFile
+
+  # Try to apply changes if we got any
+  - job: ApplyRemoteChanges
+    displayName: Apply Remote Changes
+    dependsOn: [ cloudSync ]
+    variables:
+      latestDeploymentId: $[ dependencies.cloudSync.outputs['getLatestDeploymentId.latestDeploymentId'] ]
+      remoteChangesValue: $[ dependencies.cloudSync.outputs['latestChanges.remoteChanges'] ]
+      gitPatchFile : $(Pipeline.Workspace)/patch/git-patch.diff
+    steps:
+      - checkout: 'self'
+        persistCredentials: true
+        clean: true
+        fetchDepth: 0
+        condition: eq(variables.remoteChangesValue, 'yes')
+
+      - task: DownloadPipelineArtifact@2
+        displayName: Get stored diff
+        inputs:
+          buildType: 'current'
+          artifactName: PatchFile
+          targetPath: $(Pipeline.Workspace)/patch
+        condition: eq(variables.remoteChangesValue, 'yes')
+      
+      # Using plain git to try an push changes back to local repo
+      # Depending on your setup you may need to change settings and permissions to better fit your needs
+      # This targets the same branch as the pipeline was triggered on.
+
+      ## You can change the "Azure Pipeline" and "hosted.agent@dev.azure.com" to whatever you want, this will show up in you git history on
+      ## changes coming from Umbraco Cloud
+      - task: Bash@3
+        displayName: Applying git patch to branch
+        name: cloudGitApplyStep
+        condition: eq(variables.remoteChangesValue, 'yes')
+        inputs:
+          targetType: 'filePath'
+          filePath: devops/scripts/apply_patch.sh
+          arguments: > 
+            $(gitPatchFile)
+            $(latestDeploymentId)
+            $(pipelineVendor)
+            "Azure Pipeline"
+            "hosted.agent@dev.azure.com"
