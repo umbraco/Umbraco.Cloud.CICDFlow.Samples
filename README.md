@@ -6,7 +6,7 @@ Scripts and pipeline samples for the CI/CD Flow feature on Umbraco Cloud.
 
 We have scripts that target our V1 and V2 endpoints. 
 
-For new users we recommend using V2 scripts.
+For new users we recommend using V2 scripts. You can still find the V1 scripts below.
 
 ## PowerShell V2 scripts
 You can use the same PowerShell scripts for Github and Azure Devops.
