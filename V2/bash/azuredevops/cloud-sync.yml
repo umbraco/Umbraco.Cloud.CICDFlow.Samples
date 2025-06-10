@@ -27,6 +27,7 @@ jobs:
       - task: Bash@3
         displayName: Fetch Changes From Cloud
         name: latestChanges
+        condition: ne(variables['getLatestDeploymentId.latestDeploymentId'], '')
         inputs:
           targetType: 'filePath'
           filePath: devops/scripts/get_changes_by_id.sh

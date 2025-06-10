@@ -28,6 +28,7 @@ jobs:
       - task: PowerShell@2
         displayName: Fetch Changes From Cloud
         name: latestChanges
+        condition: ne(variables['getLatestDeploymentId.latestDeploymentId'], '')
         inputs:
           pwsh: true
           targetType: 'filePath'

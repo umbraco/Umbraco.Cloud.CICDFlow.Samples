@@ -47,13 +47,12 @@ try{
         
         $JsonResponse = ConvertFrom-Json $([String]::new($Response.Content))
 
-        if ($JsonResponse.data.Count -eq 0){
-            
-            Write-Host "No deployments found"
-            Exit 0
-        }
+        $latestDeploymentId = ''
 
-        $latestDeploymentId = $JsonResponse.data[0].id
+        if ($JsonResponse.data.Count -gt 0){
+            
+            $latestDeploymentId = $JsonResponse.data[0].id
+        }
 
         ## Write the latest deployment id to the pipelines variables for use in a later step
         switch ($PipelineVendor) {
