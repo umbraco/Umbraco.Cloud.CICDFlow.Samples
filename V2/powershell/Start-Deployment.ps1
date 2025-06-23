@@ -95,11 +95,31 @@ try {
 catch {
     Write-Host "---Error---"
     Write-Host $_.Exception.Message
-    if ($null -ne $_.Exception.Response) {
+
+    if ($_.Exception.Response -is [System.Net.HttpWebResponse]) {
         $responseStream = $_.Exception.Response.GetResponseStream()
-        $reader = New-Object System.IO.StreamReader($responseStream)
-        $responseBody = $reader.ReadToEnd()
-        Write-Host "Response Body: $responseBody"
+        if ($null -ne $responseStream) {
+            $reader = New-Object System.IO.StreamReader($responseStream)
+            try {
+                $responseBody = $reader.ReadToEnd()
+                Write-Host "Response Body: $responseBody"
+            }
+            finally {
+                $reader.Dispose()
+            }
+        }
     }
+    else {
+
+        try {
+             $details = $_.ErrorDetails.ToString() | ConvertFrom-Json
+             $details | Format-List
+        }
+        catch {
+             Write-Host "Could not parse ErrorDetails as JSON."
+        }
+
+    }
+
     exit 1
 }
