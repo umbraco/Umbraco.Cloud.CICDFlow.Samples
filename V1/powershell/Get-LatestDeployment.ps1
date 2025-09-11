@@ -80,7 +80,17 @@ try{
     exit 1
 }
 catch {
-    Write-Host "---Error---"
-    Write-Host $_
-    exit 1
+  Write-Host "---Error---"
+  Write-Host "Exception Message: $($_.Exception.Message)"
+  
+  if ($_.ErrorDetails) {
+      Write-Host "API Error Response: $($_.ErrorDetails.Message)"
+  }
+  
+  if ($_.Exception.Response) {
+      $statusCode = $_.Exception.Response.StatusCode.value__
+      Write-Host "HTTP Status Code: $statusCode"
+  }
+  
+  exit 1
 }

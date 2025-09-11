@@ -93,13 +93,17 @@ try{
     exit 1
 }
 catch {
-    Write-Host "---Error---"
-    Write-Host $_.Exception.Message
-    if ($null -ne $_.Exception.Response) {
-        $responseStream = $_.Exception.Response.GetResponseStream()
-        $reader = New-Object System.IO.StreamReader($responseStream)
-        $responseBody = $reader.ReadToEnd()
-        Write-Host "Response Body: $responseBody"
-    }
-    exit 1
+  Write-Host "---Error---"
+  Write-Host "Exception Message: $($_.Exception.Message)"
+  
+  if ($_.ErrorDetails) {
+      Write-Host "API Error Response: $($_.ErrorDetails.Message)"
+  }
+  
+  if ($_.Exception.Response) {
+      $statusCode = $_.Exception.Response.StatusCode.value__
+      Write-Host "HTTP Status Code: $statusCode"
+  }
+  
+  exit 1
 }
