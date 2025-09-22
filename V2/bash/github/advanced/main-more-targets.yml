@@ -49,6 +49,8 @@ jobs:
     name: "Prepare and Upload Artifact"
     uses: ./.github/workflows/cloud-artifact.yml
     needs: cloud-sync
+    with:
+      newSha: ${{ needs.cloud-sync.outputs.newSha }}
     secrets:
       projectId: ${{ secrets.PROJECT_ID }}
       umbracoCloudApiKey: ${{ secrets.UMBRACO_CLOUD_API_KEY }}
