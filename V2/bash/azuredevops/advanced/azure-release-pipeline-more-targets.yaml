@@ -86,4 +86,5 @@ stages:
           artifactId: $(artifactId)
           noBuildAndRestore: 'true'
           skipVersionCheck: 'true'
+          allowAnyTarget: 'false'
           targetEnvironmentAlias: $(targetEnvironment)

@@ -8,7 +8,8 @@ targetEnvironmentAlias="$4"
 commitMessage="$5"
 noBuildAndRestore="${6:-false}"
 skipVersionCheck="${7:-false}"
-pipelineVendor="$8"
+allowAnyTarget="${8:-false}"
+pipelineVendor="$9"
 
 # Not required, defaults to https://api.cloud.umbraco.com
 baseUrl="${9:-https://api.cloud.umbraco.com}" 
@@ -27,11 +28,12 @@ function call_api {
   echo " - commitMessage: $commitMessage"
   echo " - noBuildAndRestore: $noBuildAndRestore"
   echo " - skipVersionCheck: $skipVersionCheck"
+  echo " - allowAnyTarget: $allowAnyTarget"
 
   response=$(curl -s -w "%{http_code}" -X POST $url \
     -H "Umbraco-Cloud-Api-Key: $apiKey" \
     -H "Content-Type: application/json" \
-    -d "{\"targetEnvironmentAlias\": \"$targetEnvironmentAlias\",\"artifactId\": \"$artifactId\",\"commitMessage\": \"$commitMessage\",\"noBuildAndRestore\": $noBuildAndRestore,\"skipVersionCheck\": $skipVersionCheck}")
+    -d "{\"targetEnvironmentAlias\": \"$targetEnvironmentAlias\",\"artifactId\": \"$artifactId\",\"commitMessage\": \"$commitMessage\",\"noBuildAndRestore\": $noBuildAndRestore,\"skipVersionCheck\": $skipVersionCheck,\"allowAnyTarget\": $allowAnyTarget}")
 
   responseCode=${response: -3}  
   content=${response%???}

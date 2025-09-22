@@ -30,6 +30,11 @@ on:
         required: false
         type: string
         default: "false"
+      allowAnyTarget:
+        description: 'Allows deployments to targets other than left-most or flexible'
+        required: false
+        type: string
+        default: "false"
 
     secrets:
       projectId:
@@ -61,6 +66,7 @@ jobs:
           "Run for ${{ github.run_number }}"
           ${{ inputs.noBuildAndRestore}}
           ${{ inputs.skipVersionCheck }}
+          ${{ inputs.allowAnyTarget }}
           GITHUB
 
   awaitDeploymentFinished:

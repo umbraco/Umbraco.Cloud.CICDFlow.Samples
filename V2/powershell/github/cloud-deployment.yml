@@ -66,6 +66,7 @@ jobs:
           -CommitMessage "Run number ${{github.run_number}}" 
           -NoBuildAndRestore ${{ inputs.noBuildAndRestore }}
           -SkipVersionCheck ${{ inputs.skipVersionCheck }}
+          -AllowAnyTarget ${{ inputs.allowAnyTarget }}
           -PipelineVendor GITHUB
 
   awaitDeploymentFinished:

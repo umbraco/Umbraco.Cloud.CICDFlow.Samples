@@ -31,7 +31,7 @@ jobs:
 
   # Deploy to Umbraco Cloud
   # ####
-  # you can edit the variables noBuildAndRestore and skipVersionCheck    
+  # you can edit the variables noBuildAndRestore, skipVersionCheck and allowAnyTarget
   # use booleans but as strings
   cloud-deployment:
     name: "Deploy to Cloud"
@@ -42,6 +42,7 @@ jobs:
       targetEnvironmentAlias: ${{ vars.TARGET_ENVIRONMENT_ALIAS }}
       noBuildAndRestore: "false"
       skipVersionCheck: "false"
+      allowAnyTarget: "false"
     secrets:
       projectId: ${{ secrets.PROJECT_ID }}
       umbracoCloudApiKey: ${{ secrets.UMBRACO_CLOUD_API_KEY }}

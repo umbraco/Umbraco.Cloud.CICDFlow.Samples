@@ -7,6 +7,9 @@ parameters:
   - name: skipVersionCheck
     type: string
     default: 'false'
+  - name: allowAnyTarget
+    type: string
+    default: 'false'
   - name: targetEnvironmentAlias
     type: string
     default: $(targetEnvironmentAlias)
@@ -23,6 +26,7 @@ jobs:
           artifactId: ${{ parameters.artifactId }}
           noBuildAndRestore: ${{ parameters.noBuildAndRestore }}
           skipVersionCheck: ${{ parameters.skipVersionCheck }}
+          allowAnyTarget: ${{ parameters.allowAnyTarget }}
         inputs:
           targetType: 'filePath'
           filePath: devops/scripts/start_deployment.sh
@@ -34,6 +38,7 @@ jobs:
             "Run for $(Build.BuildNumber)"
             $noBuildAndRestore
             $skipVersionCheck
+            $allowAnyTarget
             $(pipelineVendor)
 
   - job: CheckDeploymentProgress
