@@ -7,6 +7,9 @@ parameters:
   - name: skipVersionCheck
     type: boolean
     default: false
+  - name: allowAnyTarget
+    type: boolean
+    default: false
   - name: targetEnvironmentAlias
     type: string
     default: $(targetEnvironmentAlias)
@@ -31,6 +34,7 @@ jobs:
             -CommitMessage "Run for $(Build.BuildNumber)"
             -NoBuildAndRestore $${{ parameters.noBuildAndRestore }}
             -SkipVersionCheck $${{ parameters.skipVersionCheck }}
+            -AllowAnyTarget $${{ parameters.allowAnyTarget }}
             -PipelineVendor $(pipelineVendor)
 
   - job: CheckDeploymentProgress

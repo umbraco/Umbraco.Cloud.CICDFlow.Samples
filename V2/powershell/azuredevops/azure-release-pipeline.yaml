@@ -43,7 +43,7 @@ stages:
 
   # Deploy to Umbraco Cloud
   # ####
-  # you can edit the variables noBuildAndRestore and skipVersionCheck    
+  # you can edit the variables noBuildAndRestore, skipVersionCheck and allowAnyTarget
   # use booleans
   - stage: CloudDeploymentStage
     displayName: Deploy To Cloud
@@ -57,3 +57,4 @@ stages:
           artifactId: $(artifactId)
           noBuildAndRestore: false
           skipVersionCheck: false
+          allowAnyTarget: false

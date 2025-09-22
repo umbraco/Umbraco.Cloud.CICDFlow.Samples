@@ -30,6 +30,11 @@ on:
         required: false
         type: number
         default: 0
+      allowAnyTarget:
+        description: 'Allows deployments to targets other than left-most or flexible'
+        required: false
+        type: number
+        default: 0
 
     secrets:
       projectId:
