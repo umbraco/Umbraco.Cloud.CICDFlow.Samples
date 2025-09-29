@@ -12,7 +12,7 @@ allowAnyTarget="${8:-false}"
 pipelineVendor="$9"
 
 # Not required, defaults to https://api.cloud.umbraco.com
-baseUrl="${9:-https://api.cloud.umbraco.com}" 
+baseUrl="${10:-https://api.cloud.umbraco.com}" 
 
 
 ### Endpoint docs
