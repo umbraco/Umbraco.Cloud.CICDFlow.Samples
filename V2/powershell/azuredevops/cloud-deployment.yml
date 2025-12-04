@@ -7,9 +7,15 @@ parameters:
   - name: skipVersionCheck
     type: boolean
     default: false
+  - name: skipPreserveUmbracoCloudJson
+    type: boolean
+    default: false
   - name: allowAnyTarget
     type: boolean
     default: false
+  - name: runSchemaExtraction
+    type: boolean
+    default: true
   - name: targetEnvironmentAlias
     type: string
     default: $(targetEnvironmentAlias)
@@ -26,7 +32,7 @@ jobs:
           pwsh: true
           targetType: 'filePath'
           filePath: devops/powershell/Start-Deployment.ps1
-          arguments: > 
+          arguments: >
             -ProjectId $(projectId)
             -ApiKey $(umbracoCloudApiKey)
             -ArtifactId ${{ parameters.artifactId }}
@@ -34,7 +40,9 @@ jobs:
             -CommitMessage "Run for $(Build.BuildNumber)"
             -NoBuildAndRestore $${{ parameters.noBuildAndRestore }}
             -SkipVersionCheck $${{ parameters.skipVersionCheck }}
+            -SkipPreserveUmbracoCloudJson $${{ parameters.skipPreserveUmbracoCloudJson }}
             -AllowAnyTarget $${{ parameters.allowAnyTarget }}
+            -RunSchemaExtraction $${{ parameters.runSchemaExtraction }}
             -PipelineVendor $(pipelineVendor)
 
   - job: CheckDeploymentProgress

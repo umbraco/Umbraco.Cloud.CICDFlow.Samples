@@ -30,11 +30,21 @@ on:
         required: false
         type: string
         default: "false"
+      skipPreserveUmbracoCloudJson:
+        description: 'Skip preserving umbraco-cloud.json file'
+        required: false
+        type: string
+        default: "false"
       allowAnyTarget:
         description: 'Allows deployments to targets other than left-most or flexible'
         required: false
         type: string
         default: "false"
+      runSchemaExtraction:
+        description: 'Run schema extraction during deployment'
+        required: false
+        type: string
+        default: "true"
 
     secrets:
       projectId:
@@ -59,14 +69,16 @@ jobs:
         shell: bash
         run: >
           bash ${{ GITHUB.WORKSPACE }}/.github/scripts/start_deployment.sh
-          ${{ secrets.projectId }} 
-          ${{ secrets.umbracoCloudApiKey }} 
+          ${{ secrets.projectId }}
+          ${{ secrets.umbracoCloudApiKey }}
           ${{ inputs.artifactId }}
           ${{ inputs.targetEnvironmentAlias }}
           "Run for ${{ github.run_number }}"
-          ${{ inputs.noBuildAndRestore}}
+          ${{ inputs.noBuildAndRestore }}
           ${{ inputs.skipVersionCheck }}
+          ${{ inputs.skipPreserveUmbracoCloudJson }}
           ${{ inputs.allowAnyTarget }}
+          ${{ inputs.runSchemaExtraction }}
           GITHUB
 
   awaitDeploymentFinished:
