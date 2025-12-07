@@ -57,7 +57,8 @@ jobs:
 
   # Deploy to Umbraco Cloud
   # ####
-  # you can edit the variables noBuildAndRestore and skipVersionCheck    
+  # you can edit the variables noBuildAndRestore, skipVersionCheck, skipPreserveUmbracoCloudJson, 
+  # allowAnyTarget and runSchemaExtraction
   # use booleans but as strings
   cloud-deployment:
     name: "Deploy to Cloud"
@@ -68,6 +69,9 @@ jobs:
       targetEnvironmentAlias: ${{ needs.set-env.outputs.targetEnvironmentAlias }}
       noBuildAndRestore: "false"
       skipVersionCheck: "false"
+      skipPreserveUmbracoCloudJson: "false"
+      allowAnyTarget: "false"
+      runSchemaExtraction: "true"
     secrets:
       projectId: ${{ secrets.PROJECT_ID }}
       umbracoCloudApiKey: ${{ secrets.UMBRACO_CLOUD_API_KEY }}
