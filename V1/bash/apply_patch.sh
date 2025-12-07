@@ -57,7 +57,7 @@ if git apply "$patchFile" --ignore-space-change --ignore-whitespace --check; the
     else 
         echo "Please use one of the supported Pipeline Vendors or enhance script to fit your needs"
         echo "Currently supported are: GITHUB and AZUREDEVOPS"
-        Exit 1
+        exit 1
     fi
     echo "Changes are applied successfully"
     echo ""
