@@ -27,7 +27,7 @@ stages:
   - stage: cloudSyncStage
     displayName: Umbraco Cloud Sync
     jobs:
-      - template: cloud-sync.yml  
+      - template: cloud-sync.yml
 
   # Pack and upload the deployment Artifact
   - stage: cloudPrepareArtifact
@@ -43,7 +43,7 @@ stages:
 
   # Deploy to Umbraco Cloud
   # ####
-  # you can edit the variables noBuildAndRestore, skipVersionCheck, skipPreserveUmbracoCloudJson, 
+  # you can edit the variables noBuildAndRestore, skipVersionCheck, skipPreserveUmbracoCloudJson,
   # and runSchemaExtraction
   # use booleans but as strings
   - stage: CloudDeploymentStage

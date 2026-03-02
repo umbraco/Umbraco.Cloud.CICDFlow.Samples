@@ -8,14 +8,14 @@ jobs:
     displayName: Check Cloud for changes
     steps:
       # Gets the latest CICD Flow deployment if there is any
-      # Will write "latestDeploymentId" to pipeline variables, value can be an uuid or empty string 
+      # Will write "latestDeploymentId" to pipeline variables, value can be an uuid or empty string
       - task: Bash@3
         displayName: Get Latest Deployment
         name: getLatestDeploymentId
         inputs:
           targetType: 'filePath'
           filePath: devops/scripts/get_latest_deployment.sh
-          arguments: > 
+          arguments: >
             $(projectId)
             $(umbracoCloudApiKey)
             ${{ parameters.targetEnvironmentAlias }}
@@ -31,7 +31,7 @@ jobs:
         inputs:
           targetType: 'filePath'
           filePath: devops/scripts/get_changes_by_id.sh
-          arguments: > 
+          arguments: >
             $(projectId)
             $(umbracoCloudApiKey)
             $(latestDeploymentId)
@@ -50,7 +50,7 @@ jobs:
       - task: PublishPipelineArtifact@1
         displayName: Store diff before applying
         condition: and(succeeded(), eq(variables['latestChanges.remoteChanges'], 'yes'))
-        inputs: 
+        inputs:
           targetPath: $(Pipeline.Workspace)/patch/git-patch.diff
           artifact: PatchFile
 
@@ -76,7 +76,7 @@ jobs:
           artifactName: PatchFile
           targetPath: $(Pipeline.Workspace)/patch
         condition: eq(variables.remoteChangesValue, 'yes')
-      
+
       # Using plain git to try an push changes back to local repo
       # Depending on your setup you may need to change settings and permissions to better fit your needs
       # This targets the same branch as the pipeline was triggered on.
@@ -90,7 +90,7 @@ jobs:
         inputs:
           targetType: 'filePath'
           filePath: devops/scripts/apply_patch.sh
-          arguments: > 
+          arguments: >
             $(gitPatchFile)
             $(latestDeploymentId)
             $(pipelineVendor)

@@ -16,7 +16,7 @@ parameters:
   - name: targetEnvironmentAlias
     type: string
     default: $(targetEnvironmentAlias)
-    
+
 jobs:
   - job: StartDeployment
     displayName: Start Deployment
@@ -52,13 +52,13 @@ jobs:
     variables:
       deploymentId: $[ dependencies.StartDeployment.outputs['requestStartDeployment.deploymentId'] ]
     steps:
-      # Poll until deployment finishes 
+      # Poll until deployment finishes
       - task: Bash@3
         displayName: Wait for deployment completed
         inputs:
           targetType: 'filePath'
           filePath: devops/scripts/get_deployment_status.sh
-          arguments: > 
+          arguments: >
             $(projectId)
             $(umbracoCloudApiKey)
             $(deploymentId)

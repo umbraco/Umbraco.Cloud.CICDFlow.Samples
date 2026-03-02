@@ -1,0 +1,72 @@
+name: Tests
+
+on:
+  push:
+    paths:
+      - 'V2/**'
+      - 'tests/**'
+  pull_request:
+    paths:
+      - 'V2/**'
+      - 'tests/**'
+  workflow_dispatch:
+
+jobs:
+  bash-tests:
+    name: Bash Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install bats-core
+        run: sudo apt-get install -y bats
+
+      - name: Run bash tests
+        run: bats tests/bash-V2/
+
+  powershell-tests:
+    name: PowerShell Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Pester
+        shell: pwsh
+        run: Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser
+
+      - name: Run PowerShell tests
+        shell: pwsh
+        run: Invoke-Pester ./tests/powershell-V2/ -Output Detailed -CI
+
+  actionlint:
+    name: Lint GitHub Actions Samples
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install actionlint
+        run: |
+          VERSION=$(curl -s https://api.github.com/repos/rhysd/actionlint/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
+          curl -sL "https://github.com/rhysd/actionlint/releases/download/${VERSION}/actionlint_${VERSION#v}_linux_amd64.tar.gz" | tar xz actionlint
+          sudo mv actionlint /usr/local/bin/
+
+      - name: Lint GitHub Actions sample files
+        # workflow-call errors are suppressed: the sample files reference
+        # .github/workflows/* paths that only exist in the user's own repo
+        run: |
+          find V2 -path "*/github*" -name "*.yml" | sort | \
+            xargs actionlint -ignore 'could not read reusable workflow file'
+
+  yamllint:
+    name: Lint Azure DevOps Samples
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Lint Azure DevOps sample files
+        run: |
+          find V2 -path "*/azuredevops*" \( -name "*.yml" -o -name "*.yaml" \) | sort | \
+            xargs yamllint -c .yamllint.yml

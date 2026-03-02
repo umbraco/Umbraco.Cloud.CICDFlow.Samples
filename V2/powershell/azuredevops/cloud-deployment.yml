@@ -47,14 +47,14 @@ jobs:
     variables:
       deploymentId: $[ dependencies.StartDeployment.outputs['requestStartDeployment.deploymentId'] ]
     steps:
-      # Poll until deployment finishes 
+      # Poll until deployment finishes
       - task: PowerShell@2
         displayName: Wait for deployment completed
         inputs:
           pwsh: true
           targetType: 'filePath'
           filePath: devops/powershell/Test-DeploymentStatus.ps1
-          arguments: > 
+          arguments: >
             -ProjectId $(projectId)
             -ApiKey $(umbracoCloudApiKey)
             -DeploymentId $(deploymentId)

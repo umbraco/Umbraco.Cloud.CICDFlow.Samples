@@ -17,7 +17,7 @@ variables:
   - name: flexibleTargetEnvironmentAlias
     value: ##Your other target environment alias here##
 
-# Trigger when committing to main or flexible branch 
+# Trigger when committing to main or flexible branch
 trigger:
   batch: true
   branches:
@@ -54,7 +54,7 @@ stages:
       targetEnvironment: $[ stageDependencies.resolveTarget.setTargetEnvironment.outputs['setTargetEnvironmentValue.targetEnvironment'] ]
     jobs:
       - template: cloud-sync.yml
-        parameters: 
+        parameters:
           targetEnvironmentAlias: $(targetEnvironment)
 
   # Pack and upload the deployment Artifact
@@ -71,7 +71,7 @@ stages:
 
   # Deploy to Umbraco Cloud
   # ####
-  # you can edit the variables noBuildAndRestore, skipVersionCheck, skipPreserveUmbracoCloudJson, 
+  # you can edit the variables noBuildAndRestore, skipVersionCheck, skipPreserveUmbracoCloudJson,
   # and runSchemaExtraction
   # use booleans but as strings
   - stage: CloudDeploymentStage

@@ -1,0 +1,16 @@
+extends: default
+rules:
+  document-start: disable      # Azure DevOps pipelines don't use ---
+  line-length: disable         # Pipeline argument lines are intentionally long
+  comments:
+    require-starting-space: false  # Allow ##placeholder## marker style
+    min-spaces-from-content: 1
+  brackets:
+    min-spaces-inside: 0
+    max-spaces-inside: 1       # Allow [ StartDeployment ] AzDO array style
+  colons:
+    max-spaces-before: 1       # Allow spaces before colon in complex expressions
+    max-spaces-after: 1
+  truthy:
+    allowed-values: ['true', 'false']
+    check-keys: false
