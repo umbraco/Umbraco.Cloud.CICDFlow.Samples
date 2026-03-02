@@ -85,4 +85,4 @@ fi
 
 echo "Please use one of the supported Pipeline Vendors or enhance script to fit your needs"
 echo "Currently supported are: GITHUB and AZUREDEVOPS"
-Exit 1
+exit 1
