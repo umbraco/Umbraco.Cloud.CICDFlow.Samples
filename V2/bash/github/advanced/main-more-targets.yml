@@ -21,12 +21,12 @@ jobs:
           echo "Triggering branch: ${{ github.ref_name }}"
           if [[ "${{ github.ref_name }}" == "main" ]]; then
             echo "Target is: $leftmostMainline"
-            echo "targetEnvironmentAlias=$leftmostMainline" >> $GITHUB_OUTPUT
+            echo "targetEnvironmentAlias=$leftmostMainline" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.ref_name }}" = "flexible" ]; then
             echo "Target is: $flexible"
-            echo "targetEnvironmentAlias=$flexible" >> $GITHUB_OUTPUT
+            echo "targetEnvironmentAlias=$flexible" >> "$GITHUB_OUTPUT"
           else
-            echo "no target environment defined for branch: $(Build.SourceBranchName)"
+            echo "no target environment defined for branch: ${{ github.ref_name }}"
             exit 1
           fi
         env:
