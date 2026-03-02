@@ -12,6 +12,32 @@ Install Pester module:
 Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser
 ```
 
+### Linting (actionlint + shellcheck + yamllint)
+
+#### macOS
+
+```bash
+brew install actionlint shellcheck
+pip install yamllint
+```
+
+#### Linux (Ubuntu/Debian)
+
+```bash
+# shellcheck is available via apt
+sudo apt-get install shellcheck
+
+# actionlint — download the latest binary from GitHub releases
+VERSION=$(curl -s https://api.github.com/repos/rhysd/actionlint/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
+curl -sL "https://github.com/rhysd/actionlint/releases/download/${VERSION}/actionlint_${VERSION#v}_linux_amd64.tar.gz" | tar xz actionlint
+sudo mv actionlint /usr/local/bin/
+
+# yamllint
+pip install yamllint
+```
+
+> **Note:** actionlint uses shellcheck automatically when it is available on `PATH`. Without shellcheck installed, shell script checks inside `run:` blocks are skipped.
+
 ### Bash Tests (Bats)
 
 #### macOS
@@ -60,6 +86,24 @@ git clone https://github.com/bats-core/bats-core.git
 ```
 
 When running Bats on Windows (Git Bash), ensure scripts have Unix line endings (LF, not CRLF).
+
+## Running Linting
+
+### Lint GitHub Actions sample files (actionlint)
+
+Run from the repository root:
+
+```bash
+find V2 -path "*/github*" -name "*.yml" | sort | xargs actionlint
+```
+
+### Lint Azure DevOps sample files (yamllint)
+
+Run from the repository root:
+
+```bash
+find V2 -path "*/azuredevops*" \( -name "*.yml" -o -name "*.yaml" \) | sort | xargs yamllint -c .yamllint.yml
+```
 
 ## Running Tests
 

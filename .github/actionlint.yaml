@@ -1,0 +1,7 @@
+paths:
+  # Sample files reference .github/workflows/* paths that only exist once
+  # copied into a user's own repository. The reusable workflow files do exist
+  # in this repo but live under V2/*/github/ rather than .github/workflows/.
+  'V2/*/github/**':
+    ignore:
+      - 'could not read reusable workflow file'

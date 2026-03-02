@@ -51,11 +51,9 @@ jobs:
           sudo mv actionlint /usr/local/bin/
 
       - name: Lint GitHub Actions sample files
-        # workflow-call errors are suppressed: the sample files reference
-        # .github/workflows/* paths that only exist in the user's own repo
         run: |
           find V2 -path "*/github*" -name "*.yml" | sort | \
-            xargs actionlint -ignore 'could not read reusable workflow file'
+            xargs actionlint
 
   yamllint:
     name: Lint Azure DevOps Samples
