@@ -10,9 +10,6 @@ parameters:
   - name: skipPreserveUmbracoCloudJson
     type: string
     default: 'false'
-  - name: allowAnyTarget
-    type: string
-    default: 'false'
   - name: runSchemaExtraction
     type: string
     default: 'true'
@@ -33,7 +30,6 @@ jobs:
           noBuildAndRestore: ${{ parameters.noBuildAndRestore }}
           skipVersionCheck: ${{ parameters.skipVersionCheck }}
           skipPreserveUmbracoCloudJson: ${{ parameters.skipPreserveUmbracoCloudJson }}
-          allowAnyTarget: ${{ parameters.allowAnyTarget }}
           runSchemaExtraction: ${{ parameters.runSchemaExtraction }}
         inputs:
           targetType: 'filePath'
@@ -44,10 +40,9 @@ jobs:
             $artifactId
             ${{ parameters.targetEnvironmentAlias }}
             "Run for $(Build.BuildNumber)"
+            $skipPreserveUmbracoCloudJson
             $noBuildAndRestore
             $skipVersionCheck
-            $skipPreserveUmbracoCloudJson
-            $allowAnyTarget
             $runSchemaExtraction
             $(pipelineVendor)
 

@@ -21,29 +21,25 @@ param(
 
     [Parameter(Position=5)]
     [bool]
-    $NoBuildAndRestore = $false,
+    $SkipPreserveUmbracoCloudJson = $false,
 
     [Parameter(Position=6)]
     [bool]
-    $SkipVersionCheck = $false,
-
+    $NoBuildAndRestore = $false,
+    
     [Parameter(Position=7)]
     [bool]
-    $SkipPreserveUmbracoCloudJson = $false,
+    $SkipVersionCheck = $false,
 
     [Parameter(Position=8)]
     [bool]
-    $AllowAnyTarget = $false,
-
-    [Parameter(Position=9)]
-    [bool]
     $RunSchemaExtraction = $true,
 
-    [Parameter(Position=10)]
+    [Parameter(Position=9)]
     [string]
     $PipelineVendor, ## GITHUB or AZUREDEVOPS
 
-    [Parameter(Position=11)]
+    [Parameter(Position=10)]
     [string]
     $BaseUrl = "https://api.cloud.umbraco.com"
 )
@@ -62,10 +58,9 @@ $requestBody = @{
     'targetEnvironmentAlias' = $TargetEnvironmentAlias
     'artifactId' = $ArtifactId
     'commitMessage' = $CommitMessage
+    'skipPreserveUmbracoCloudJson' = $SkipPreserveUmbracoCloudJson
     'noBuildAndRestore' = $NoBuildAndRestore
     'skipVersionCheck' = $SkipVersionCheck
-    'skipPreserveUmbracoCloudJson' = $SkipPreserveUmbracoCloudJson
-    'allowAnyTarget' = $AllowAnyTarget
     'runSchemaExtraction' = $RunSchemaExtraction
 } | ConvertTo-Json
 

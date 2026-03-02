@@ -72,7 +72,7 @@ stages:
   # Deploy to Umbraco Cloud
   # ####
   # you can edit the variables noBuildAndRestore, skipVersionCheck, skipPreserveUmbracoCloudJson,
-  # allowAnyTarget and runSchemaExtraction
+  # and runSchemaExtraction
   # use booleans
   - stage: CloudDeploymentStage
     displayName: Deploy To Cloud
@@ -88,6 +88,5 @@ stages:
           noBuildAndRestore: false
           skipVersionCheck: false
           skipPreserveUmbracoCloudJson: false
-          allowAnyTarget: false
           runSchemaExtraction: true
           targetEnvironmentAlias: $(targetEnvironment)

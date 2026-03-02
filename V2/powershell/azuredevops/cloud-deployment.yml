@@ -10,9 +10,6 @@ parameters:
   - name: skipPreserveUmbracoCloudJson
     type: boolean
     default: false
-  - name: allowAnyTarget
-    type: boolean
-    default: false
   - name: runSchemaExtraction
     type: boolean
     default: true
@@ -38,10 +35,9 @@ jobs:
             -ArtifactId ${{ parameters.artifactId }}
             -TargetEnvironmentAlias ${{ parameters.targetEnvironmentAlias }}
             -CommitMessage "Run for $(Build.BuildNumber)"
+            -SkipPreserveUmbracoCloudJson $${{ parameters.skipPreserveUmbracoCloudJson }}
             -NoBuildAndRestore $${{ parameters.noBuildAndRestore }}
             -SkipVersionCheck $${{ parameters.skipVersionCheck }}
-            -SkipPreserveUmbracoCloudJson $${{ parameters.skipPreserveUmbracoCloudJson }}
-            -AllowAnyTarget $${{ parameters.allowAnyTarget }}
             -RunSchemaExtraction $${{ parameters.runSchemaExtraction }}
             -PipelineVendor $(pipelineVendor)
 

@@ -35,11 +35,6 @@ on:
         required: false
         type: number
         default: 0
-      allowAnyTarget:
-        description: 'Allows deployments to targets other than left-most or flexible'
-        required: false
-        type: number
-        default: 0
       runSchemaExtraction:
         description: 'Run schema extraction during deployment'
         required: false
@@ -74,10 +69,9 @@ jobs:
           -ArtifactId ${{ inputs.artifactId }}
           -TargetEnvironmentAlias ${{ inputs.targetEnvironmentAlias }}
           -CommitMessage "Run number ${{github.run_number}}"
+          -SkipPreserveUmbracoCloudJson ${{ inputs.skipPreserveUmbracoCloudJson }}
           -NoBuildAndRestore ${{ inputs.noBuildAndRestore }}
           -SkipVersionCheck ${{ inputs.skipVersionCheck }}
-          -SkipPreserveUmbracoCloudJson ${{ inputs.skipPreserveUmbracoCloudJson }}
-          -AllowAnyTarget ${{ inputs.allowAnyTarget }}
           -RunSchemaExtraction ${{ inputs.runSchemaExtraction }}
           -PipelineVendor GITHUB
 
