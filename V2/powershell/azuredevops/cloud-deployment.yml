@@ -7,6 +7,12 @@ parameters:
   - name: skipVersionCheck
     type: boolean
     default: false
+  - name: skipPreserveUmbracoCloudJson
+    type: boolean
+    default: false
+  - name: runSchemaExtraction
+    type: boolean
+    default: true
   - name: targetEnvironmentAlias
     type: string
     default: $(targetEnvironmentAlias)
@@ -23,14 +29,16 @@ jobs:
           pwsh: true
           targetType: 'filePath'
           filePath: devops/powershell/Start-Deployment.ps1
-          arguments: > 
+          arguments: >
             -ProjectId $(projectId)
             -ApiKey $(umbracoCloudApiKey)
             -ArtifactId ${{ parameters.artifactId }}
             -TargetEnvironmentAlias ${{ parameters.targetEnvironmentAlias }}
             -CommitMessage "Run for $(Build.BuildNumber)"
+            -SkipPreserveUmbracoCloudJson $${{ parameters.skipPreserveUmbracoCloudJson }}
             -NoBuildAndRestore $${{ parameters.noBuildAndRestore }}
             -SkipVersionCheck $${{ parameters.skipVersionCheck }}
+            -RunSchemaExtraction $${{ parameters.runSchemaExtraction }}
             -PipelineVendor $(pipelineVendor)
 
   - job: CheckDeploymentProgress
@@ -39,14 +47,14 @@ jobs:
     variables:
       deploymentId: $[ dependencies.StartDeployment.outputs['requestStartDeployment.deploymentId'] ]
     steps:
-      # Poll until deployment finishes 
+      # Poll until deployment finishes
       - task: PowerShell@2
         displayName: Wait for deployment completed
         inputs:
           pwsh: true
           targetType: 'filePath'
           filePath: devops/powershell/Test-DeploymentStatus.ps1
-          arguments: > 
+          arguments: >
             -ProjectId $(projectId)
             -ApiKey $(umbracoCloudApiKey)
             -DeploymentId $(deploymentId)

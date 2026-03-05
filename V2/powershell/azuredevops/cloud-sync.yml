@@ -8,7 +8,7 @@ jobs:
     displayName: Check Cloud for changes
     steps:
       # Gets the latest CICD Flow deployment if there is any
-      # Will write "latestDeploymentId" to pipeline variables, value can be an uuid or empty string 
+      # Will write "latestDeploymentId" to pipeline variables, value can be an uuid or empty string
       - task: PowerShell@2
         displayName: Get Latest Deployment
         name: getLatestDeploymentId
@@ -16,7 +16,7 @@ jobs:
           pwsh: true
           targetType: 'filePath'
           filePath: devops/powershell/Get-LatestDeployment.ps1
-          arguments: > 
+          arguments: >
             -ProjectId $(projectId)
             -ApiKey $(umbracoCloudApiKey)
             -TargetEnvironmentAlias ${{ parameters.targetEnvironmentAlias }}
@@ -33,7 +33,7 @@ jobs:
           pwsh: true
           targetType: 'filePath'
           filePath: devops/powershell/Get-ChangesById.ps1
-          arguments: > 
+          arguments: >
             -ProjectId $(projectId)
             -ApiKey $(umbracoCloudApiKey)
             -DeploymentId $(latestDeploymentId)
@@ -52,7 +52,7 @@ jobs:
       - task: PublishPipelineArtifact@1
         displayName: Store diff before applying
         condition: and(succeeded(), eq(variables['latestChanges.remoteChanges'], 'yes'))
-        inputs: 
+        inputs:
           targetPath: $(Pipeline.Workspace)/patch/git-patch.diff
           artifact: PatchFile
 
@@ -78,7 +78,7 @@ jobs:
           artifactName: PatchFile
           targetPath: $(Pipeline.Workspace)/patch
         condition: eq(variables.remoteChangesValue, 'yes')
-      
+
       # Using plain git to try an push changes back to local repo
       # Depending on your setup you may need to change settings and permissions to better fit your needs
       # This targets the same branch as the pipeline was triggered on.
@@ -93,7 +93,7 @@ jobs:
           pwsh: true
           targetType: 'filePath'
           filePath: devops/powershell/Apply-Patch.ps1
-          arguments: > 
+          arguments: >
             -PatchFile $(gitPatchFile)
             -LatestDeploymentId $(latestDeploymentId)
             -PipelineVendor $(pipelineVendor)

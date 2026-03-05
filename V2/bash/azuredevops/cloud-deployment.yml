@@ -7,10 +7,16 @@ parameters:
   - name: skipVersionCheck
     type: string
     default: 'false'
+  - name: skipPreserveUmbracoCloudJson
+    type: string
+    default: 'false'
+  - name: runSchemaExtraction
+    type: string
+    default: 'true'
   - name: targetEnvironmentAlias
     type: string
     default: $(targetEnvironmentAlias)
-    
+
 jobs:
   - job: StartDeployment
     displayName: Start Deployment
@@ -23,17 +29,21 @@ jobs:
           artifactId: ${{ parameters.artifactId }}
           noBuildAndRestore: ${{ parameters.noBuildAndRestore }}
           skipVersionCheck: ${{ parameters.skipVersionCheck }}
+          skipPreserveUmbracoCloudJson: ${{ parameters.skipPreserveUmbracoCloudJson }}
+          runSchemaExtraction: ${{ parameters.runSchemaExtraction }}
         inputs:
           targetType: 'filePath'
           filePath: devops/scripts/start_deployment.sh
-          arguments: > 
+          arguments: >
             $(projectId)
             $(umbracoCloudApiKey)
             $artifactId
             ${{ parameters.targetEnvironmentAlias }}
             "Run for $(Build.BuildNumber)"
+            $skipPreserveUmbracoCloudJson
             $noBuildAndRestore
             $skipVersionCheck
+            $runSchemaExtraction
             $(pipelineVendor)
 
   - job: CheckDeploymentProgress
@@ -42,13 +52,13 @@ jobs:
     variables:
       deploymentId: $[ dependencies.StartDeployment.outputs['requestStartDeployment.deploymentId'] ]
     steps:
-      # Poll until deployment finishes 
+      # Poll until deployment finishes
       - task: Bash@3
         displayName: Wait for deployment completed
         inputs:
           targetType: 'filePath'
           filePath: devops/scripts/get_deployment_status.sh
-          arguments: > 
+          arguments: >
             $(projectId)
             $(umbracoCloudApiKey)
             $(deploymentId)

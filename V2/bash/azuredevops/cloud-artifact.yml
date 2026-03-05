@@ -44,7 +44,7 @@ jobs:
         inputs:
           targetType: 'filePath'
           filePath: devops/scripts/upload_artifact.sh
-          arguments: > 
+          arguments: >
             $(projectId)
             $(umbracoCloudApiKey)
             $(System.DefaultWorkingDirectory)/sources.zip

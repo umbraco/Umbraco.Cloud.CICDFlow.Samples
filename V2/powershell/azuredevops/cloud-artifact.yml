@@ -45,7 +45,7 @@ jobs:
           pwsh: true
           targetType: 'filePath'
           filePath: devops/powershell/Add-DeploymentArtifact.ps1
-          arguments: > 
+          arguments: >
             -ProjectId $(projectId)
             -ApiKey $(umbracoCloudApiKey)
             -FilePath $(System.DefaultWorkingDirectory)/sources.zip

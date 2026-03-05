@@ -27,7 +27,7 @@ stages:
   - stage: cloudSyncStage
     displayName: Umbraco Cloud Sync
     jobs:
-      - template: cloud-sync.yml  
+      - template: cloud-sync.yml
 
   # Pack and upload the deployment Artifact
   - stage: cloudPrepareArtifact
@@ -43,7 +43,8 @@ stages:
 
   # Deploy to Umbraco Cloud
   # ####
-  # you can edit the variables noBuildAndRestore and skipVersionCheck    
+  # you can edit the variables noBuildAndRestore, skipVersionCheck, skipPreserveUmbracoCloudJson,
+  # and runSchemaExtraction
   # use booleans
   - stage: CloudDeploymentStage
     displayName: Deploy To Cloud
@@ -51,9 +52,11 @@ stages:
     condition: in(dependencies.cloudPrepareArtifact.result, 'Succeeded')
     variables:
       artifactId: $[ stageDependencies.cloudPrepareArtifact.PrepareAndUploadArtifact.outputs['uploadArtifact.artifactId'] ]
-    jobs: 
+    jobs:
       - template: cloud-deployment.yml
         parameters:
           artifactId: $(artifactId)
           noBuildAndRestore: false
           skipVersionCheck: false
+          skipPreserveUmbracoCloudJson: false
+          runSchemaExtraction: true
