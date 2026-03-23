@@ -33,7 +33,7 @@ function call_api {
     -H "Content-Type: application/json")
     responseCode=${response: -3}  
     content=${response%???}
-  cat "content"
+  cat "$content"
   if [[ 10#$responseCode -eq 200 ]]; then
     latestDeploymentId=$(echo $content | jq -Rnr '[inputs] | join("\\n") | fromjson | .data[0].id')
 
