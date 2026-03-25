@@ -1,0 +1,74 @@
+name: Tests
+
+trigger:
+  batch: true
+  branches:
+    include:
+      - 'main'
+  paths:
+    include:
+      - 'V2/**'
+      - 'tests/**'
+
+pr:
+  branches:
+    include:
+      - '*'
+  paths:
+    include:
+      - 'V2/**'
+      - 'tests/**'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+jobs:
+  - job: BashTests
+    displayName: Bash Tests
+    steps:
+      - checkout: self
+
+      - script: sudo apt-get install -y bats
+        displayName: Install bats-core
+
+      - script: bats tests/bash-V2/
+        displayName: Run bash tests
+
+  - job: PowerShellTests
+    displayName: PowerShell Tests
+    steps:
+      - checkout: self
+
+      - pwsh: Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser
+        displayName: Install Pester
+
+      - pwsh: Invoke-Pester ./tests/powershell-V2/ -Output Detailed -CI
+        displayName: Run PowerShell tests
+
+  - job: ActionLint
+    displayName: Lint GitHub Actions Samples
+    steps:
+      - checkout: self
+
+      - script: |
+          curl -sL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash | bash
+          sudo mv actionlint /usr/local/bin/
+        displayName: Install actionlint
+
+      - script: |
+          find V2 -path "*/github*" -name "*.yml" | sort | \
+            xargs actionlint -config-file devops/actionlint.yaml
+        displayName: Lint GitHub Actions sample files
+
+  - job: YamlLint
+    displayName: Lint Azure DevOps Samples
+    steps:
+      - checkout: self
+
+      - script: pip install yamllint
+        displayName: Install yamllint
+
+      - script: |
+          find V2 -path "*/azuredevops*" \( -name "*.yml" -o -name "*.yaml" \) | sort | \
+            xargs yamllint -c .yamllint.yml
+        displayName: Lint Azure DevOps sample files
