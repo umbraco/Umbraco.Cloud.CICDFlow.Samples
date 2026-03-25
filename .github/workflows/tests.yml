@@ -53,7 +53,7 @@ jobs:
       - name: Lint GitHub Actions sample files
         run: |
           find V2 -path "*/github*" -name "*.yml" | sort | \
-            xargs actionlint
+            xargs actionlint -config-file devops/actionlint.yaml
 
   yamllint:
     name: Lint Azure DevOps Samples
