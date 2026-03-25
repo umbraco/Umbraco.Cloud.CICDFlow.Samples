@@ -57,22 +57,22 @@ function call_api {
 
     echo "Artifact uploaded - Artifact Id: $artifact_id"
     echo "--- Upload Response ---"
-    cat "$content"
+    echo "$content"
 
     exit 0
   fi
 
-  ## Let errors bubble forward 
+  ## Let errors bubble forward
   errorResponse=$content
   echo "Unexpected API Response Code: $responseCode - More details below"
   # Check if the input is valid JSON
-  cat "$errorResponse" | jq . > /dev/null 2>&1
+  echo "$errorResponse" | jq . > /dev/null 2>&1
   if [ $? -ne 0 ]; then
       echo "--- Response RAW ---\n"
-      cat "$errorResponse"
-  else 
+      echo "$errorResponse"
+  else
       echo "--- Response JSON formatted ---"
-      cat "$errorResponse" | jq .
+      echo "$errorResponse" | jq .
   fi
   echo "---Response End---"
   exit 1
