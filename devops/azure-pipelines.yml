@@ -31,7 +31,12 @@ jobs:
       - script: sudo apt-get install -y bats
         displayName: Install bats-core
 
-      - script: bats tests/bash-V2/
+      - script: |
+          for f in tests/bash-V2/*.bats; do
+            echo "##[group]$(basename $f)"
+            bats "$f"
+            echo "##[endgroup]"
+          done
         displayName: Run bash tests
 
   - job: PowerShellTests

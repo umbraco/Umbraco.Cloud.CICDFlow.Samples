@@ -69,13 +69,13 @@ function call_api {
   errorResponse=$content
   echo "Unexpected API Response Code: $responseCode - More details below"
   # Check if the input is valid JSON
-  cat "$errorResponse" | jq . > /dev/null 2>&1
+  echo "$errorResponse" | jq . > /dev/null 2>&1
   if [ $? -ne 0 ]; then
       echo "--- Response RAW ---\n"
-      cat "$errorResponse"
-  else 
+      echo "$errorResponse"
+  else
       echo "--- Response JSON formatted ---\n"
-      cat "$errorResponse" | jq .
+      echo "$errorResponse" | jq .
   fi
   echo "\n---Response End---"
   exit 1

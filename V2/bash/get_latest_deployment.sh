@@ -33,7 +33,7 @@ function call_api {
     -H "Content-Type: application/json")
     responseCode=${response: -3}  
     content=${response%???}
-  cat "$content"
+  echo "$content"
   if [[ 10#$responseCode -eq 200 ]]; then
     latestDeploymentId=$(echo $content | jq -Rnr '[inputs] | join("\\n") | fromjson | .data[0].id')
 
@@ -54,13 +54,13 @@ function call_api {
   errorResponse=$response
   echo "Unexpected API Response Code: $responseCode - More details below"
   # Check if the input is valid JSON
-  cat "$errorResponse" | jq . > /dev/null 2>&1
+  echo "$errorResponse" | jq . > /dev/null 2>&1
   if [ $? -ne 0 ]; then
       echo "--- Response RAW ---\n"
-      cat "$errorResponse"
-  else 
+      echo "$errorResponse"
+  else
       echo "--- Response JSON formatted ---\n"
-      cat "$errorResponse" | jq .
+      echo "$errorResponse" | jq .
   fi
   echo "\n---Response End---"
   exit 1
