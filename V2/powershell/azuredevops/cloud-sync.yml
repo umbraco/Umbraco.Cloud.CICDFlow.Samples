@@ -41,7 +41,7 @@ jobs:
             -DownloadFolder $(Pipeline.Workspace)/patch
             -PipelineVendor $(pipelineVendor)
 
-      - task: Powershell@2
+      - task: PowerShell@2
         displayName: See diff content if any
         condition: and(succeeded(), eq(variables['latestChanges.remoteChanges'], 'yes'))
         inputs:
