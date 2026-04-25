@@ -16,7 +16,7 @@ jobs:
     name: Bash Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install bats-core
         run: sudo apt-get install -y bats
@@ -28,7 +28,7 @@ jobs:
     name: PowerShell Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Pester
         shell: pwsh
@@ -42,7 +42,7 @@ jobs:
     name: Lint GitHub Actions Samples
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install actionlint
         run: |
@@ -59,7 +59,7 @@ jobs:
     name: Lint Azure DevOps Samples
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install yamllint
         run: pip install yamllint

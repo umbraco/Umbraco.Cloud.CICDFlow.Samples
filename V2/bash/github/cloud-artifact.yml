@@ -23,7 +23,7 @@ jobs:
     outputs:
       artifactId: ${{ steps.upload-artifact.outputs.artifactId }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.newSha }}
 
@@ -39,7 +39,7 @@ jobs:
 
       # store artifact for easy debug if needed
       - name: Store artifact in pipeline
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: source-artifact
           path: ${{GITHUB.WORKSPACE}}/sources.zip
