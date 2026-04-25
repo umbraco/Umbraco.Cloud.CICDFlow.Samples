@@ -54,7 +54,7 @@ jobs:
     outputs:
       runningDeploymentId: ${{ steps.requestStartDeployment.outputs.deploymentId }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # Request to prepare a deployment
       # - sets the commit message to be used in cloud 
@@ -80,7 +80,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: startDeployment
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # Poll until deployment finishes 
       - name: Wait for deployment completed
