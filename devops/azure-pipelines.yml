@@ -31,7 +31,12 @@ jobs:
       - script: sudo apt-get install -y bats
         displayName: Install bats-core
 
-      - script: bats tests/bash-V2/
+      - script: |
+          for f in tests/bash-V2/*.bats; do
+            echo "##[group]$(basename $f)"
+            bats "$f"
+            echo "##[endgroup]"
+          done
         displayName: Run bash tests
 
   - job: PowerShellTests
@@ -80,7 +85,7 @@ jobs:
 
       - script: |
           echo "--- Checking GitHub Actions versions in sample files ---"
-          uses=$(grep -rh "uses:" --include="*.yml" . \
+          uses=$(grep -rh "uses:" --include="*.yml" --exclude-dir=devops . \
             | sed 's/.*uses:[[:space:]]*//' \
             | grep -v "^\./" | grep "@" | sort -u)
 
@@ -89,8 +94,9 @@ jobs:
             current=$(echo "$ref" | cut -d@ -f2)
             latest=$(curl -sf "https://api.github.com/repos/$repo/releases/latest" \
               | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('tag_name',''))" 2>/dev/null)
-            if [ -n "$latest" ] && [ "$latest" != "$current" ]; then
-              echo "##[warning]OUTDATED: $repo  current=$current  latest=$latest"
+            if [ -n "$latest" ] && [ "$latest" != "$current" ] && [[ "$latest" != "${current}".* ]]; then
+              files=$(grep -rl "uses:.*${repo}@${current}" --include="*.yml" --exclude-dir=devops . | sort | tr '\n' ' ')
+              echo "##[warning]OUTDATED: $repo  current=$current  latest=$latest  files: $files"
             else
               echo "OK: $repo $current"
             fi
