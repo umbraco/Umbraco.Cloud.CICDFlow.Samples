@@ -72,3 +72,50 @@ jobs:
           find V2 -path "*/azuredevops*" \( -name "*.yml" -o -name "*.yaml" \) | sort | \
             xargs yamllint -c .yamllint.yml
         displayName: Lint Azure DevOps sample files
+
+  - job: CheckActionVersions
+    displayName: Check Action Versions
+    steps:
+      - checkout: self
+
+      - script: |
+          echo "--- Checking GitHub Actions versions in sample files ---"
+          uses=$(grep -rh "uses:" --include="*.yml" . \
+            | sed 's/.*uses:[[:space:]]*//' \
+            | grep -v "^\./" | grep "@" | sort -u)
+
+          for ref in $uses; do
+            repo=$(echo "$ref" | cut -d@ -f1)
+            current=$(echo "$ref" | cut -d@ -f2)
+            latest=$(curl -sf "https://api.github.com/repos/$repo/releases/latest" \
+              | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('tag_name',''))" 2>/dev/null)
+            if [ -n "$latest" ] && [ "$latest" != "$current" ]; then
+              echo "##[warning]OUTDATED: $repo  current=$current  latest=$latest"
+            else
+              echo "OK: $repo $current"
+            fi
+          done
+        displayName: Check GitHub Actions versions
+
+      - script: |
+          echo "--- Checking Azure DevOps task versions ---"
+          task_list=$(curl -sf "https://api.github.com/repos/microsoft/azure-pipelines-tasks/contents/Tasks" \
+            | python3 -c "import sys,json; [print(e['name']) for e in json.load(sys.stdin)]" 2>/dev/null)
+
+          check_task() {
+            local name=$1
+            local current=$2
+            local latest
+            latest=$(echo "$task_list" | grep -i "^${name}V" | grep -o '[0-9]*$' | sort -n | tail -1)
+            if [ -n "$latest" ] && [ "$latest" -gt "$current" ]; then
+              echo "##[warning]OUTDATED AzDo task: $name  current=@${current}  latest=@${latest}"
+            else
+              echo "OK: $name@${current}"
+            fi
+          }
+
+          check_task "Bash" 3
+          check_task "PowerShell" 2
+          check_task "PublishPipelineArtifact" 1
+          check_task "DownloadPipelineArtifact" 2
+        displayName: Check Azure DevOps task versions
